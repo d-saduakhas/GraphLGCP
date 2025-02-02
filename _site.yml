@@ -1,0 +1,35 @@
+name: "LGCP on Metric Graphs"
+output_dir: "docs"
+navbar:
+  title: "LGCP on Metric Graphs"
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "Graph"
+      href: graph_setup.html
+    - text: "Covariates"
+      menu:
+        - text: "Extracting Covariates"
+          href: covariates.html
+        - text: "Computing Spatial Covariates"
+          href: covariates2.html
+    - text: "LGCP"
+      menu:
+        - text: "Model 1"
+          href: model1.html
+        - text: "Model 2"
+          href: model2.html
+    - text: "Risk Analysis"
+      href: exceedance.html
+    - text: "Interactive Maps"
+      href: maps.html
+  right:
+    - icon: fa-file-pdf
+      href: https://arxiv.org/abs/2501.18558
+    - icon: fa-github
+      href: https://github.com/d-saduakhas/GraphLGCP
+output:
+  html_document:
+    highlight: textmate
+    theme: flatly
+    css: style.css

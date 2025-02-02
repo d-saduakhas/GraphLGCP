@@ -1,0 +1,246 @@
+---
+title: "Build Graph"
+output:
+  html_document:
+    mathjax: "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+    highlight: "pygments"
+    theme: "flatly"
+    code_folding: "show"
+    toc: true
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    number_sections: true
+    fig_caption: true
+always_allow_html: true
+---
+
+```{css, echo = FALSE, include = FALSE}
+body .main-container {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+body {
+  max-width: 100% !important;
+}
+
+body, td {
+  font-size: 16px;
+}
+code.r{
+  font-size: 14px;
+}
+pre {
+  font-size: 14px
+}
+.custom-box {
+  background-color: #f5f7fa; /* Light grey-blue background */
+    border-color: #e1e8ed; /* Light border color */
+    color: #2c3e50; /* Dark text color */
+    padding: 15px; /* Padding inside the box */
+    border-radius: 5px; /* Rounded corners */
+    margin-bottom: 20px; /* Spacing below the box */
+}
+.caption {
+  margin: auto;
+  text-align: center;
+  margin-bottom: 20px; /* Spacing below the box */
+}
+```
+
+Go back to the [About page](about.html).
+
+## **Building the Metric Graph**
+
+In this section, we construct the metric graph for the road network. The graph is the foundation for all subsequent analyses.
+
+Let us start by setting some global options for all code.
+```{r  setup, include=FALSE}
+# Set seed for reproducibility
+set.seed(42) 
+# Set global options for all code chunks
+knitr::opts_chunk$set(
+  # Disable messages printed by R code chunks
+  message = FALSE,    
+  # Disable warnings printed by R code chunks
+  warning = FALSE,    
+  # Show R code within code chunks in output
+  echo = TRUE,        
+  # Include both R code and its results in output
+  include = TRUE,     
+  # Evaluate R code chunks
+  eval = TRUE,       
+  # Enable caching of R code chunks for faster rendering
+  cache = FALSE,      
+  # Align figures in the center of the output
+  fig.align = "center",
+  # Enable retina display for high-resolution figures
+  retina = 2,
+  # Show errors in the output instead of stopping rendering
+  error = TRUE,
+  # Do not collapse code and output into a single block
+  collapse = FALSE
+)
+```
+
+Load the necessary libraries.
+
+```{r}
+# Load libraries
+library(MetricGraph)
+library(ggplot2)
+library(sp)
+library(sf)
+library(mapview)
+library(dplyr)
+library(qs)
+library(tidyr)
+library(leaflet)
+library(DataExplorer)
+
+library(here)
+library(rmarkdown)
+library(grateful) # Cite all loaded packages
+```
+
+Here we start with prepared data from TomTom, a commercial traffic data provider. The data includes road segments with attributes such as length, speed limit, and traffic intensity. We will filter and transform this data to create a graph for the city center of Ahsa.
+The `FRC' stands for the Functional Road Class, which is a classification of roads based on their importance and function. The FRC ranges from 1 to 7, with 1 being the highest class (e.g., highways) and 7 the lowest class (e.g., local roads). We start by checking the data structure and missing values.
+
+```{r}
+# Load data
+load(here("Data/tomtom_ahsa_extended.RData"))
+tomtom <- data
+rm(data)
+
+# Convert FRC to numeric and plot missing values
+tomtom$FRC <- as.numeric(tomtom$FRC)
+plot_missing(tomtom)
+
+hist(tomtom$SpeedLimit)
+unique(tomtom$SpeedLimit)
+```
+
+The speed limit values are not rounded to the nearest 10, which is common in practice. We will round the speed limit values and compute the traffic intensity based on the speed limit, road length, and functional road class (FRC). The traffic intensity is a measure of traffic flow on a road segment, which we will use as a covariate in the LGCP model.
+
+```{r}
+# Round to the nearest tenth
+tomtom$SpeedLimit <- round(tomtom$SpeedLimit / 10) * 10
+hist(tomtom$SpeedLimit)
+unique(tomtom$SpeedLimit)
+
+# Compute traffic density 
+compute_traffic_intensity <- function(data) {
+  data$FRC[data$FRC == 0] <- 1 # Avoid division by zero
+  data$TrafficIntensity <- (data$SpeedLimit / data$FRC) * log(data$Length) # using Chaudhuri et al. (2023) formula
+  return(data)
+}
+
+tomtom <- compute_traffic_intensity(tomtom)
+hist(tomtom$TrafficIntensity)
+```
+
+```{r}
+# Load polygon boundary for the city center
+polygon <- st_read(here("Data/center_ahsa_polygon.geojson")) %>%
+  st_cast("POLYGON") %>%
+  st_transform(crs = st_crs(tomtom))
+
+# Visualize the polygon boundary
+leaflet() %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addPolygons(data = polygon, color = "red", fill = FALSE, weight = 2)
+```
+
+
+```{r}
+# Filter and transform TomTom data for the city center
+filter_transform_tomtom <- function(data, polygon) {
+  data %>%
+    dplyr::select(Segment.Id, Length, FRC, SpeedLimit, averageSpeed, sampleSize,
+                  TrafficIntensity, geometry, "10percentile", "90percentile") %>%
+    mutate(Length_km = Length / 1000,
+           density = sampleSize / Length_km,
+           density_per_hour = density / 24) %>%
+    st_transform(crs = st_crs(data)) %>%
+    st_filter(x = ., y = polygon, .predicate = st_within)
+}
+
+tomtom_sub <- filter_transform_tomtom(tomtom, polygon)
+
+# Inspect the filtered data
+str(tomtom_sub) # [178,807 × 14] graph with FRC7
+```
+
+We recommend to use the high-precision data, when available, to construct large-scale graphs. This will ensure fast and accurate graph construction. Given such high-precision, one can safely put the `merge_close_vertices` argument in the `graph_components$new()` to `FALSE`. This will prevent the merging of close vertices, and therefore speed up significantly the graph construction and also reduce computational memory load.
+
+```{r, eval=FALSE, include=T}
+# New way to directly build the graph
+system.time({
+  graph = graph_components$new(edges = tomtom_sub,  merge_close_vertices = FALSE, verbose=2)
+})
+
+# user  system elapsed 
+# 87.534   0.800  88.723 
+graph$n
+
+# Get the largest connected component
+graph_ahsa <- graph$get_largest()
+
+# Save the graph object with high compression
+qsave(graph_ahsa, "Data/graph_weighted_7FRC_city_center.qs", preset = "high")
+
+```
+
+We further prune the graph, i.e. remove the vertices with degree 2 without changing the graph structure. This will reduce the number of vertices and edges, and speed up the computation of the LGCP model. Note that, here we add the edge weights to the graph object, because we will use them as spatial covariates in the LGCP model. This will ensure the dimensional compatibility between the graph and the covariates. Since edge weights are added beforehand, pruning will involve comparison of the weights on edges, and ensure we are only removing vertices with degree 2 that have the same edge weights. For practical purposes, this means that we are checking if the road is of the same type and has the same speed limit, and only then we remove the vertices. 
+
+
+```{r, eval=FALSE, include=T}
+graph <- qread("Data/graph_weighted_7FRC_city_center.qs")
+graph$set_edge_weights(weights = graph$get_edge_weights() %>% select(FRC, SpeedLimit))
+graph$get_edge_weights()
+system.time({
+  graph$prune_vertices(verbose=2)
+})
+# user  system elapsed 
+# 390.751  41.643 434.038 
+
+# Save the graph object with high compression
+qsave(graph, "Data/graph_weighted_7FRC_city_center_pruned.qs", preset = "high")
+```
+
+## **Build mesh for LGCP fitting**
+
+After constructing the graph, we need to set up the mesh for the LGCP model. 
+Even though we do not use the finite element method (FEM) for approximating the the Whittle--Matérn field $u(s)$, we still need to set up the mesh for LGCP model.
+
+The mesh is built with a resolution of 100 meters. Before building the mesh, we add the data as observations to the graph to avoid placing mesh nodes too close. We also normalize the data and set a tolerance of 0.6 (600 meters) for the duplicated observations. 
+
+
+```{r, eval=FALSE}
+# Build and setup mesh for graph
+build_mesh <- function(graph, h = 0.1) {
+  graph$build_mesh(h=h)
+  graph$compute_fem()
+}
+
+# Load graph and build mesh
+setup_graph_mesh <- function() {
+  graph <- qread("Data/graph_weighted_7FRC_city_center_pruned.qs")
+  data <- qread("Data/data_all_reasons_with_distances_7FRC.qs")
+  
+  # Add as observation to avoid placing mesh nodes too close
+  rem.obs <- graph$add_observations(data, normalized = TRUE, tolerance = 0.6,clear_obs = TRUE,
+                                    duplicated_strategy = "jitter")
+  graph$observation_to_vertex(verbose = 1)
+  build_mesh(graph)
+  qsave(graph, "Data/graph_mesh_pruned_100m_7FRC_ver2.qs")
+}
+system.time({
+  setup_graph_mesh()
+})
+# user  system elapsed 
+# 896.174   9.031 905.481 
+
+```
+
+The graph is now ready for the LGCP model fitting. The additional step is to prepare the spatial covariates for the LGCP model. We will cover this in the next section. If you are interested in the LGCP model fitting without covariates, please refer to the [Model 1](model_fitting1.html) page.

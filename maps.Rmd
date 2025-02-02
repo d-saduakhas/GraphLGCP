@@ -1,0 +1,79 @@
+---
+title: "Additional Maps"
+output:
+  html_document:
+    mathjax: "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+    highlight: pygments
+    theme: flatly
+    code_folding: show
+    toc: true
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    number_sections: true
+    fig_caption: true
+always_allow_html: true
+---
+```{r  setup, include=FALSE}
+# Set seed for reproducibility
+set.seed(42) 
+# Set global options for all code chunks
+knitr::opts_chunk$set(
+  # Disable messages printed by R code chunks
+  message = FALSE,    
+  # Disable warnings printed by R code chunks
+  warning = FALSE,    
+  # Show R code within code chunks in output
+  echo = TRUE,        
+  # Include both R code and its results in output
+  include = TRUE,     
+  # Evaluate R code chunks
+  eval = FALSE,       
+  # Enable caching of R code chunks for faster rendering
+  cache = FALSE,      
+  # Align figures in the center of the output
+  fig.align = "center",
+  # Enable retina display for high-resolution figures
+  retina = 2,
+  # Show errors in the output instead of stopping rendering
+  error = TRUE,
+  # Do not collapse code and output into a single block
+  collapse = FALSE
+)
+```
+
+```{css, echo = FALSE}
+body .main-container {
+max-width: 100% !important;
+width: 100% !important;
+}
+body {
+max-width: 100% !important;
+}
+
+body, td {
+font-size: 16px;
+}
+code.r{
+font-size: 14px;
+}
+pre {
+font-size: 14px
+}
+.custom-box {
+background-color: #f5f7fa; /* Light grey-blue background */
+border-color: #e1e8ed; /* Light border color */
+color: #2c3e50; /* Dark text color */
+padding: 15px; /* Padding inside the box */
+border-radius: 5px; /* Rounded corners */
+margin-bottom: 20px; /* Spacing below the box */
+}
+.caption {
+margin: auto;
+text-align: center;
+margin-bottom: 20px; /* Spacing below the box */
+}
+```
+
+In this section, we will show additional plots that can be used to visualize the spatial distribution of the covariates along the network.
+

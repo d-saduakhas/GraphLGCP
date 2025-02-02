@@ -1,0 +1,330 @@
+---
+title: "Covariate Extraction"
+output:
+  html_document:
+    mathjax: "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+    highlight: pygments
+    theme: flatly
+    code_folding: show
+    toc: true
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    number_sections: true
+    fig_caption: true
+always_allow_html: true
+---
+```{r  setup, include=FALSE}
+# Set seed for reproducibility
+set.seed(42) 
+# Set global options for all code chunks
+knitr::opts_chunk$set(
+  # Disable messages printed by R code chunks
+  message = FALSE,    
+  # Disable warnings printed by R code chunks
+  warning = FALSE,    
+  # Show R code within code chunks in output
+  echo = TRUE,        
+  # Include both R code and its results in output
+  include = TRUE,     
+  # Evaluate R code chunks
+  eval = FALSE,       
+  # Enable caching of R code chunks for faster rendering
+  cache = FALSE,      
+  # Align figures in the center of the output
+  fig.align = "center",
+  # Enable retina display for high-resolution figures
+  retina = 2,
+  # Show errors in the output instead of stopping rendering
+  error = TRUE,
+  # Do not collapse code and output into a single block
+  collapse = FALSE
+)
+```
+
+```{css, echo = FALSE}
+body .main-container {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+body {
+  max-width: 100% !important;
+}
+
+body, td {
+  font-size: 16px;
+}
+code.r{
+  font-size: 14px;
+}
+pre {
+  font-size: 14px
+}
+.custom-box {
+  background-color: #f5f7fa; /* Light grey-blue background */
+    border-color: #e1e8ed; /* Light border color */
+    color: #2c3e50; /* Dark text color */
+    padding: 15px; /* Padding inside the box */
+    border-radius: 5px; /* Rounded corners */
+    margin-bottom: 20px; /* Spacing below the box */
+}
+.caption {
+  margin: auto;
+  text-align: center;
+  margin-bottom: 20px; /* Spacing below the box */
+}
+```
+
+
+We now continue building a spatial covariate dataset for LGCP model. Given the file `additional_city_objects.RData' built in the previous step (see [Covariate Extraction](covariates.html)), we will compute the distances to the nearest objects and transformations based on them. The distances can be computed either using the Euclidean distance or the shortest path distance, i.e. geodesic. In this case, we will use the Euclidean distance, but we also provide the code for computing the shortest path distance.
+
+
+#  Option 1: Using the Euclidean distances 
+
+We will first start by computing the distances to the nearest objects for each accident location. Then for our Model 2, we have to additionally compute the distances to the nearest objects for each mesh location. This is a crucial step in the LGCP model, as the spatial covariates have to be available for both the accidents and the mesh locations. It is therfore crucial to select the appropriate covariates that will be available or can be computed for the whole spatial domain.
+
+```{r}
+library(osmdata)
+library(sf)
+library(MetricGraph)
+library(rSPDE)
+library(INLA)
+library(qs)
+library(ggplot2)
+library(DataExplorer)
+library(here)
+
+# Load data
+df <- qread("Data/data_all_reasons_full_FRC7.qs")
+graph <- qread("Data/graph_mesh_pruned_100m_7FRC_ver2.qs") 
+load("Data/additional_city_objects.RData")
+
+```
+
+## Computing distances for each accident location
+
+Each accident is a point with a geometry, we need to compute the distance to the nearest  mosque, school, bank, fuel station, hospital.
+We will use the function `st_nearest_feature' from the sf package.
+```{r}
+######### OPTION 1 - COMPUTING THE EUCLIDEAN DISTANCES TO THE NEAREST OBJECTS #########
+
+compute_nearest_distance <- function(points, objects) {
+  distances <- st_distance(points, objects)
+  
+  # Check and print the units of the distances
+  distance_units <- attr(distances, "units")
+  print(paste("The units of the distances are:", distance_units))
+  
+  min_distances <- apply(distances, 1, min)
+  return(min_distances)
+}
+
+accidents_sf <- st_as_sf(df, coords = c("longitude", "latitude"), crs = 4326, remove = FALSE)
+
+
+##### Compute for all the accident locations #####
+# Merge all of the amenities into a single data frame
+objects <- rbind(mosques, education_places, finance_places, hospital_places, intersection)
+amenities = c("mosque", "education", "finance", "hospital", "intersection")
+for(i in amenities){
+  df[[paste0("distance_to_", i)]] <- compute_nearest_distance(accidents_sf, objects %>% filter(amenity == i))
+}
+
+transform_distances <- function(distances, method = "inverse") {
+  if (method == "inverse") {
+    return(1 / distances)
+  } else if (method == "inverse_sqrt") {
+    return(1 / sqrt(distances))
+  } else if (method == "log") {
+    return(log1p(distances))  # log1p computes log(1 + x), handling zero distances
+  } else if (method == "exp_decay") {
+    decay_rate <- 0.001  # in kilometers
+    return(exp(-decay_rate * distances))
+  } else if (method == "exp_decay_double") {
+    decay_rate <-  0.002
+    return(exp(-decay_rate * distances))
+  } else {
+    stop("Unknown transformation method")
+  }
+}
+
+# transform the distances to the nearest objects for amenities
+for(i in amenities){
+  df[[paste0("inv_distance_to_", i)]] <- transform_distances(df[[paste0("distance_to_", i)]], method = "inverse")
+  df[[paste0("inv_sqrt_distance_to_", i)]] <- transform_distances(df[[paste0("distance_to_", i)]], method = "inverse_sqrt")
+  df[[paste0("log_distance_to_", i)]] <- transform_distances(df[[paste0("distance_to_", i)]], method = "log")
+  df[[paste0("exp_decay_distance_to_", i)]] <- transform_distances(df[[paste0("distance_to_", i)]], method = "exp_decay")
+  df[[paste0("exp_decay_double_distance_to_", i)]] <- transform_distances(df[[paste0("distance_to_", i)]], method = "exp_decay_double")
+}
+```
+
+
+```{r}
+knitr::include_graphics("Figures/3Covariates_all_transformations_hist_distance_to_mosque.png")
+
+```
+
+Here is the code used to generate the plots:
+
+```{r, eval = FALSE}
+# plot the transformed distances for the mosque and save it
+png("Figures/3Covariates_all_transformations_hist_distance_to_mosque.png", height = 3*500, width = 3*700, res = 300)
+par(mfrow = c(2, 3))
+hist(df$inv_distance_to_mosque, main = "Inverse Distance to Nearest Mosque")
+hist(df$inv_sqrt_distance_to_mosque, main = "Inverse Square Root Distance to Nearest Mosque")
+hist(df$log_distance_to_mosque, main = "Log Distance to Nearest Mosque")
+hist(df$exp_decay_distance_to_mosque, main = "Exponential Decay Distance to Nearest Mosque")
+hist(df$exp_decay_double_distance_to_mosque, main = "Exponential Decay Double Distance to Nearest Mosque")
+dev.off()
+
+png("Figures/3Covariates_exp_decay_all_amenities.png",height = 3*500, width = 3*700,res = 300)
+par(mfrow = c(2, 3))
+hist(df$exp_decay_distance_to_mosque, main = "Exponential Decay Distance to Nearest Mosque")
+hist(df$exp_decay_distance_to_finance, main = "Exponential Decay Distance to Nearest Bank or ATM")
+hist(df$exp_decay_distance_to_hospital, main = "Exponential Decay Distance to Nearest Hospital")
+hist(df$exp_decay_distance_to_intersection,  main = "Exponential Decay Distance to Nearest Intersection")
+hist(df$exp_decay_distance_to_education, main = "Exponential Decay Distance to Nearest School")
+dev.off()
+
+```
+
+This will be our data used in [LGCP model](model_fitting2.html). We will save the data and the graph with the distances to the nearest objects.
+
+```{r}
+# Save updated data
+qsave(df, "Data/data_all_reasons_with_distances_7FRC.qs")
+```
+
+
+```{r}
+graph$add_observations(df, normalized = TRUE, tolerance =0.6, group = "YearNew",clear_obs = TRUE, duplicated_strategy = "jitter")
+
+png("Figures/3Covariates_exp_decay_distance_to_hospital_7FRC.png",height = 3*500, width = 3*700,res = 300)
+graph$plot(data = "exp_decay_distance_to_hospital", vertex_size=0, edge_width = 0.07,
+           data_size = 0.5, group = c(1,2,3)) + theme_minimal() + 
+  ggtitle("Distance to the Nearest Hospital with Exponential Decay")+ labs(color = "")
+dev.off()
+
+png("Figures/3Covariates_exp_decay_distance_to_intersection_7FRC.png",height = 3*500, width = 3*700,res = 300)
+graph$plot(data = "exp_decay_distance_to_intersection", vertex_size=0, edge_width = 0.07,
+           data_size = 0.5, group = c(1,2,3)) + theme_minimal() + 
+  ggtitle("Distance to the Nearest Intersection with Exponential Decay")+ labs(color = "")
+dev.off()
+
+png("Figures/3Covariates_exp_decay_distance_to_education_7FRC.png",height = 3*500, width = 3*700,res = 300)
+graph$plot(data = "exp_decay_distance_to_education", vertex_size=0, edge_width = 0.07,
+           data_size = 0.5, group = c(1,2,3)) + theme_minimal() + 
+  ggtitle("Distance to the Nearest School with Exponential Decay")+ labs(color = "")
+dev.off()
+
+png("Figures/3Covariates_exp_decay_distance_to_finance_7FRC.png",height = 3*500, width = 3*700,res = 300)
+graph$plot(data = "exp_decay_distance_to_finance", vertex_size=0, edge_width = 0.07,
+           data_size = 0.5, group = c(1,2,3)) + theme_minimal() + 
+  ggtitle("Distance to the Nearest Bank or ATM with Exponential Decay")+ labs(color = "")
+dev.off()
+
+png("Figures/3Covariates_exp_decay_distance_to_mosque_7FRC.png",height = 3*500, width = 3*700,res = 300)
+graph$plot(data = "exp_decay_distance_to_mosque", vertex_size=0, edge_width = 0.07,
+           data_size = 0.5, group = c(1,2,3)) + theme_minimal() + 
+  ggtitle("Distance to the Nearest Mosque with Exponential Decay")+ labs(color = "")
+dev.off()
+
+png("Figures/3Covariates_exp_decay_double_distance_to_mosque_7FRC.png",height = 3*500, width = 3*700,res = 300)
+graph$plot(data = "exp_decay_double_distance_to_mosque", vertex_size=0, edge_width = 0.07,
+           data_size = 0.5, group = c(1,2,3)) + theme_minimal() + 
+  ggtitle("Distance to the Nearest Mosque with Exponential Decay Double")+ labs(color = "")
+dev.off()
+```
+
+## Computing distances for each mesh location
+```{r}
+##### Compute for all the mesh locations #####
+mesh_PtE = graph$get_mesh_locations() # A list or a matrix containing the mesh locations, normalized to [0,1]
+mesh_loc = graph$coordinates(mesh_PtE)
+
+mesh_locations_df <- as.data.frame(mesh_loc)
+names(mesh_locations_df) <- c("x", "y")
+mesh_locations_sf <- sf::st_as_sf(mesh_locations_df, coords = c("x", "y"), crs = 4326, remove = FALSE)
+
+
+# Calculate distances for each type of amenity
+for(i in amenities){
+  mesh_locations_sf[[paste0("distance_to_", i)]] <- compute_nearest_distance(mesh_locations_sf, objects %>% filter(amenity == i))
+  mesh_locations_sf[[paste0("exp_decay_distance_to_", i)]] <- transform_distances(mesh_locations_sf[[paste0("distance_to_", i)]], method = "exp_decay")
+  mesh_locations_sf[[paste0("inv_distance_to_", i)]] <- transform_distances(mesh_locations_sf[[paste0("distance_to_", i)]], method = "inverse")
+  mesh_locations_sf[[paste0("inv_sqrt_distance_to_", i)]] <- transform_distances(mesh_locations_sf[[paste0("distance_to_", i)]], method = "inverse_sqrt")
+  mesh_locations_sf[[paste0("log_distance_to_", i)]] <- transform_distances(mesh_locations_sf[[paste0("distance_to_", i)]], method = "log")
+  mesh_locations_sf[[paste0("exp_decay_double_distance_to_", i)]] <- transform_distances(mesh_locations_sf[[paste0("distance_to_", i)]], method = "exp_decay_double")
+}
+
+mesh_locations_sf$.edge_number = mesh_PtE[,1]
+mesh_locations_sf$.distance_on_edge = mesh_PtE[,2]
+
+# Save the updated mesh locations with distances
+qsave(mesh_locations_sf, "Data/mesh_locations_pruned_100m_with_distances_7FRC_ver2.qs")
+```
+
+Here is the code used to generate the plots:
+
+```{r}
+png("Figures/3Covariates_exp_decay_double_distance_to_mosque_mesh_7FRC.png",height = 3*500, width = 3*700,res = 300)
+ggplot(mesh_locations_sf) +
+  geom_sf(aes(color = exp_decay_double_distance_to_mosque), size = 0.005) +
+  scale_color_viridis_c() +
+  theme_minimal() +
+  labs(title = "Distance to the Nearest Mosque with Exponential Decay Double", color = "")
+dev.off()
+
+png("Figures/3Covariates_exp_decay_double_distance_to_hospital_mesh_7FRC.png",height = 3*500, width = 3*700,res = 300)
+ggplot(mesh_locations_sf) +
+  geom_sf(aes(color = exp_decay_double_distance_to_hospital), size = 0.005) +
+  scale_color_viridis_c() +
+  theme_minimal() +
+  labs(title = "Distance to the Nearest Hospital with Exponential Decay Double", color = "")
+dev.off()
+
+png("Figures/3Covariates_exp_decay_double_distance_to_intersection_mesh_7FRC.png",height = 3*500, width = 3*700,res = 300)
+ggplot(mesh_locations_sf) +
+  geom_sf(aes(color = exp_decay_double_distance_to_intersection), size = 0.005) +
+  scale_color_viridis_c() +
+  theme_minimal() +
+  labs(title = "Distance to the Nearest Intersection with Exponential Decay Double", color = "")
+dev.off()
+
+png("Figures/3Covariates_exp_decay_double_distance_to_education_mesh_7FRC.png",height = 3*500, width = 3*700,res = 300)
+ggplot(mesh_locations_sf) +
+  geom_sf(aes(color = exp_decay_double_distance_to_education), size = 0.005) +
+  scale_color_viridis_c() +
+  theme_minimal() +
+  labs(title = "Distance to the Nearest School with Exponential Decay Double", color = "")
+dev.off()
+
+png("Figures/3Covariates_exp_decay_distance_to_mosque_mesh_7FRC.png",height = 3*500, width = 3*700,res = 300)
+ggplot(mesh_locations_sf) +
+  geom_sf(aes(color = exp_decay_distance_to_mosque), size = 0.005) +
+  scale_color_viridis_c() +
+  theme_minimal() +
+  labs(title = "Distance to the Nearest Mosque with Exponential Decay", color = "")
+dev.off()
+
+png("Figures/3Covariates_exp_decay_distance_to_education_mesh_7FRC.png",height = 3*500, width = 3*700,res = 300)
+ggplot(mesh_locations_sf)+
+  geom_sf(aes(color = exp_decay_distance_to_education), size = 0.05) +
+  scale_color_viridis_c() +
+  theme_minimal() +
+  labs(title = "Distance to the Nearest Bank or ATM with Exponential Decay", color = "")
+dev.off()
+
+png("Figures/3Covariates_exp_decay_distance_to_finance_mesh_7FRC.png",height = 3*500, width = 3*700,res = 300)
+ggplot(mesh_locations_sf)+
+  geom_sf(aes(color = exp_decay_distance_to_finance), size = 0.05) +
+  scale_color_viridis_c() +
+  theme_minimal() +
+  labs(title = "Distance to the Nearest Bank or ATM with Exponential Decay", color = "")
+dev.off()
+```
+
+
+
+#  Option 2: Using the Geodesic distances 
+

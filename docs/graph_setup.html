@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Build Graph</title>
+
+<script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet" />
+<script src="site_libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<link href="site_libs/leaflet-1.3.1/leaflet.css" rel="stylesheet" />
+<script src="site_libs/leaflet-1.3.1/leaflet.js"></script>
+<link href="site_libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet" />
+<script src="site_libs/proj4-2.6.2/proj4.min.js"></script>
+<script src="site_libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
+<link href="site_libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet" />
+<script src="site_libs/leaflet-binding-2.2.2/leaflet.js"></script>
+<script src="site_libs/leaflet-providers-2.0.0/leaflet-providers_2.0.0.js"></script>
+<script src="site_libs/leaflet-providers-plugin-2.2.2/leaflet-providers-plugin.js"></script>
+<link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">LGCP on Metric Graphs</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="graph_setup.html">Graph</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Covariates
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="covariates.html">Extracting Covariates</a>
+    </li>
+    <li>
+      <a href="covariates2.html">Computing Spatial Covariates</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    LGCP
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="model_fitting1.html">Model 1</a>
+    </li>
+    <li>
+      <a href="model_fitting2.html">Model 2</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Risk
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="exceedance.html">Exceedance Probabilities</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="maps.html">Interactive Maps</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://arxiv.org/abs/2501.18558">
+    <span class="fa fa-file-pdf"></span>
+     
+  </a>
+</li>
+<li>
+  <a href="https://github.com/d-saduakhas/GraphLGCP">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Build Graph</h1>
+
+</div>
+
+
+<p>Go back to the <a href="about.html">About page</a>.</p>
+<div id="building-the-metric-graph" class="section level2" number="1">
+<h2><span class="header-section-number">1</span> <strong>Building the
+Metric Graph</strong></h2>
+<p>In this section, we construct the metric graph for the road network.
+The graph is the foundation for all subsequent analyses.</p>
+<p>Let us start by setting some global options for all code.</p>
+<p>Load the necessary libraries.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># Load libraries</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(MetricGraph)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">library</span>(sp)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="fu">library</span>(mapview)</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="fu">library</span>(qs)</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="fu">library</span>(leaflet)</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="fu">library</span>(DataExplorer)</span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="fu">library</span>(here)</span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a><span class="fu">library</span>(rmarkdown)</span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a><span class="fu">library</span>(grateful) <span class="co"># Cite all loaded packages</span></span></code></pre></div>
+<p>Here we start with prepared data from TomTom, a commercial traffic
+data provider. The data includes road segments with attributes such as
+length, speed limit, and traffic intensity. We will filter and transform
+this data to create a graph for the city center of Ahsa. The `FRC’
+stands for the Functional Road Class, which is a classification of roads
+based on their importance and function. The FRC ranges from 1 to 7, with
+1 being the highest class (e.g., highways) and 7 the lowest class (e.g.,
+local roads). We start by checking the data structure and missing
+values.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># Load data</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">load</span>(<span class="fu">here</span>(<span class="st">&quot;Data/tomtom_ahsa_extended.RData&quot;</span>))</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>tomtom <span class="ot">&lt;-</span> data</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="fu">rm</span>(data)</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co"># Convert FRC to numeric and plot missing values</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>tomtom<span class="sc">$</span>FRC <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(tomtom<span class="sc">$</span>FRC)</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="fu">plot_missing</span>(tomtom)</span></code></pre></div>
+<p><img src="graph_setup_files/figure-html/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">hist</span>(tomtom<span class="sc">$</span>SpeedLimit)</span></code></pre></div>
+<p><img src="graph_setup_files/figure-html/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">unique</span>(tomtom<span class="sc">$</span>SpeedLimit)</span></code></pre></div>
+<pre><code>##   [1]  50  70  40  45  31  18  61  60  28  19  24  29  25  68  80  30 100  20
+##  [19] 110  36  23  90 140  27  32  37  21  33 120  52  57  22  44  49  34  26
+##  [37]  47  65  35  42  53  39  43  58  38  67  41  48  46  62  64  59 139  54
+##  [55]  55  86  56  77 101  95  96  97  85  51  98  88  92 102  76  99  93  91
+##  [73]  63  83  74  81  75  84  82 115  73  71 113 114 112  94  69  66 111  79
+##  [91]  87 104 105  78  72 121  89 107 103 109</code></pre>
+<p>The speed limit values are not rounded to the nearest 10, which is
+common in practice. We will round the speed limit values and compute the
+traffic intensity based on the speed limit, road length, and functional
+road class (FRC). The traffic intensity is a measure of traffic flow on
+a road segment, which we will use as a covariate in the LGCP model.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># Round to the nearest tenth</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>tomtom<span class="sc">$</span>SpeedLimit <span class="ot">&lt;-</span> <span class="fu">round</span>(tomtom<span class="sc">$</span>SpeedLimit <span class="sc">/</span> <span class="dv">10</span>) <span class="sc">*</span> <span class="dv">10</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="fu">hist</span>(tomtom<span class="sc">$</span>SpeedLimit)</span></code></pre></div>
+<p><img src="graph_setup_files/figure-html/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">unique</span>(tomtom<span class="sc">$</span>SpeedLimit)</span></code></pre></div>
+<pre><code>##  [1]  50  70  40  30  20  60  80 100 110  90 140 120</code></pre>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># Compute traffic density </span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>compute_traffic_intensity <span class="ot">&lt;-</span> <span class="cf">function</span>(data) {</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  data<span class="sc">$</span>FRC[data<span class="sc">$</span>FRC <span class="sc">==</span> <span class="dv">0</span>] <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="co"># Avoid division by zero</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  data<span class="sc">$</span>TrafficIntensity <span class="ot">&lt;-</span> (data<span class="sc">$</span>SpeedLimit <span class="sc">/</span> data<span class="sc">$</span>FRC) <span class="sc">*</span> <span class="fu">log</span>(data<span class="sc">$</span>Length) <span class="co"># using Chaudhuri et al. (2023) formula</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  <span class="fu">return</span>(data)</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>}</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>tomtom <span class="ot">&lt;-</span> <span class="fu">compute_traffic_intensity</span>(tomtom)</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="fu">hist</span>(tomtom<span class="sc">$</span>TrafficIntensity)</span></code></pre></div>
+<p><img src="graph_setup_files/figure-html/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># Load polygon boundary for the city center</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>polygon <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="fu">here</span>(<span class="st">&quot;Data/center_ahsa_polygon.geojson&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="fu">st_cast</span>(<span class="st">&quot;POLYGON&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="fu">st_crs</span>(tomtom))</span></code></pre></div>
+<pre><code>## Reading layer `center_ahsa_polygon&#39; from data source 
+##   `/Users/saduakd/Documents/MetricGraphLGCP/Data/center_ahsa_polygon.geojson&#39; 
+##   using driver `GeoJSON&#39;
+## Simple feature collection with 1 feature and 1 field
+## Geometry type: MULTIPOLYGON
+## Dimension:     XY
+## Bounding box:  xmin: 49.43056 ymin: 25.26735 xmax: 49.79261 ymax: 25.57398
+## Geodetic CRS:  WGS 84</code></pre>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co"># Visualize the polygon boundary</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="fu">leaflet</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="fu">addProviderTiles</span>(<span class="st">&quot;CartoDB.Positron&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="fu">addPolygons</span>(<span class="at">data =</span> polygon, <span class="at">color =</span> <span class="st">&quot;red&quot;</span>, <span class="at">fill =</span> <span class="cn">FALSE</span>, <span class="at">weight =</span> <span class="dv">2</span>)</span></code></pre></div>
+<div class="leaflet html-widget html-fill-item" id="htmlwidget-30e4409849e39179307f" style="width:672px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-30e4409849e39179307f">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addProviderTiles","args":["CartoDB.Positron",null,null,{"errorTileUrl":"","noWrap":false,"detectRetina":false}]},{"method":"addPolygons","args":[[[[{"lng":[49.43056317178412,49.44080423210259,49.44743080054396,49.47212982837085,49.54381725060015,49.65044476097482,49.78598820636634,49.79140994418201,49.79261477480771,49.79080752886915,49.79080752886915,49.75586744072378,49.69984281662862,49.63176988627643,49.57454043155556,49.51791339214755,49.48719021119214,49.44020181678974,49.43056317178412],"lat":[25.42217110791317,25.49084645357821,25.53301552547779,25.56193146049465,25.56916044424887,25.57397976675168,25.50530442108663,25.49265369951676,25.39144792695775,25.3155435975385,25.28060350939313,25.27337452563891,25.2673503725104,25.2673503725104,25.26795278782325,25.27096486438751,25.30951944440999,25.37458029819792,25.42217110791317]}]]],null,null,{"interactive":true,"className":"","stroke":true,"color":"red","weight":2,"opacity":0.5,"fill":false,"fillColor":"red","fillOpacity":0.2,"smoothFactor":1,"noClip":false},null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[25.2673503725104,25.57397976675168],"lng":[49.43056317178412,49.79261477480771]}},"evals":[],"jsHooks":[]}</script>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="co"># Filter and transform TomTom data for the city center</span></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>filter_transform_tomtom <span class="ot">&lt;-</span> <span class="cf">function</span>(data, polygon) {</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  data <span class="sc">%&gt;%</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(Segment.Id, Length, FRC, SpeedLimit, averageSpeed, sampleSize,</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>                  TrafficIntensity, geometry, <span class="st">&quot;10percentile&quot;</span>, <span class="st">&quot;90percentile&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">Length_km =</span> Length <span class="sc">/</span> <span class="dv">1000</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>           <span class="at">density =</span> sampleSize <span class="sc">/</span> Length_km,</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>           <span class="at">density_per_hour =</span> density <span class="sc">/</span> <span class="dv">24</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>    <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="fu">st_crs</span>(data)) <span class="sc">%&gt;%</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a>    <span class="fu">st_filter</span>(<span class="at">x =</span> ., <span class="at">y =</span> polygon, <span class="at">.predicate =</span> st_within)</span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a>}</span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a>tomtom_sub <span class="ot">&lt;-</span> <span class="fu">filter_transform_tomtom</span>(tomtom, polygon)</span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a></span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a><span class="co"># Inspect the filtered data</span></span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a><span class="fu">str</span>(tomtom_sub) <span class="co"># [178,807 × 14] graph with FRC7</span></span></code></pre></div>
+<pre><code>## sf [178,807 × 13] (S3: sf/tbl_df/tbl/data.frame)
+##  $ Segment.Id      : chr [1:178807] &quot;-16820004539157&quot; &quot;-16820004539174&quot; &quot;-16820004539180&quot; &quot;-16820004539210&quot; ...
+##  $ Length          : num [1:178807] 143.8 63 200.3 128.8 53.6 ...
+##  $ FRC             : num [1:178807] 7 7 7 7 7 7 7 6 7 7 ...
+##  $ SpeedLimit      : num [1:178807] 50 50 50 50 50 50 50 50 50 50 ...
+##  $ averageSpeed    : num [1:178807] 20.8 33.9 19.1 15.2 17.3 ...
+##  $ sampleSize      : int [1:178807] 427 289 478 751 720 1038 412 1535 97 1435 ...
+##  $ TrafficIntensity: num [1:178807] 35.5 29.6 37.9 34.7 28.4 ...
+##  $ geometry        :sfc_LINESTRING of length 178807; first list element:  &#39;XY&#39; num [1:2, 1:2] 49.7 49.7 25.4 25.4
+##  $ 10percentile    : int [1:178807] 11 6 9 7 10 12 6 13 5 6 ...
+##  $ 90percentile    : int [1:178807] 30 74 30 23 25 37 24 35 45 25 ...
+##  $ Length_km       : num [1:178807] 0.1438 0.063 0.2004 0.1288 0.0536 ...
+##  $ density         : num [1:178807] 2970 4587 2386 5832 13433 ...
+##  $ density_per_hour: num [1:178807] 123.7 191.1 99.4 243 559.7 ...
+##  - attr(*, &quot;sf_column&quot;)= chr &quot;geometry&quot;
+##  - attr(*, &quot;agr&quot;)= Factor w/ 3 levels &quot;constant&quot;,&quot;aggregate&quot;,..: NA NA NA NA NA NA NA NA NA NA ...
+##   ..- attr(*, &quot;names&quot;)= chr [1:12] &quot;Segment.Id&quot; &quot;Length&quot; &quot;FRC&quot; &quot;SpeedLimit&quot; ...</code></pre>
+<p>We recommend to use the high-precision data, when available, to
+construct large-scale graphs. This will ensure fast and accurate graph
+construction. Given such high-precision, one can safely put the
+<code>merge_close_vertices</code> argument in the
+<code>graph_components$new()</code> to <code>FALSE</code>. This will
+prevent the merging of close vertices, and therefore speed up
+significantly the graph construction and also reduce computational
+memory load.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co"># New way to directly build the graph</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a><span class="fu">system.time</span>({</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>  graph <span class="ot">=</span> graph_components<span class="sc">$</span><span class="fu">new</span>(<span class="at">edges =</span> tomtom_sub,  <span class="at">merge_close_vertices =</span> <span class="cn">FALSE</span>, <span class="at">verbose=</span><span class="dv">2</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a>})</span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a><span class="co"># user  system elapsed </span></span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a><span class="co"># 87.534   0.800  88.723 </span></span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a>graph<span class="sc">$</span>n</span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a><span class="co"># Get the largest connected component</span></span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a>graph_ahsa <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">get_largest</span>()</span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a></span>
+<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a><span class="co"># Save the graph object with high compression</span></span>
+<span id="cb15-14"><a href="#cb15-14" tabindex="-1"></a><span class="fu">qsave</span>(graph_ahsa, <span class="st">&quot;Data/graph_weighted_7FRC_city_center.qs&quot;</span>, <span class="at">preset =</span> <span class="st">&quot;high&quot;</span>)</span></code></pre></div>
+<p>We further prune the graph, i.e. remove the vertices with degree 2
+without changing the graph structure. This will reduce the number of
+vertices and edges, and speed up the computation of the LGCP model. Note
+that, here we add the edge weights to the graph object, because we will
+use them as spatial covariates in the LGCP model. This will ensure the
+dimensional compatibility between the graph and the covariates. Since
+edge weights are added beforehand, pruning will involve comparison of
+the weights on edges, and ensure we are only removing vertices with
+degree 2 that have the same edge weights. For practical purposes, this
+means that we are checking if the road is of the same type and has the
+same speed limit, and only then we remove the vertices.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>graph <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;Data/graph_weighted_7FRC_city_center.qs&quot;</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">set_edge_weights</span>(<span class="at">weights =</span> graph<span class="sc">$</span><span class="fu">get_edge_weights</span>() <span class="sc">%&gt;%</span> <span class="fu">select</span>(FRC, SpeedLimit))</span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">get_edge_weights</span>()</span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a><span class="fu">system.time</span>({</span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a>  graph<span class="sc">$</span><span class="fu">prune_vertices</span>(<span class="at">verbose=</span><span class="dv">2</span>)</span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a>})</span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a><span class="co"># user  system elapsed </span></span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a><span class="co"># 390.751  41.643 434.038 </span></span>
+<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" tabindex="-1"></a><span class="co"># Save the graph object with high compression</span></span>
+<span id="cb16-11"><a href="#cb16-11" tabindex="-1"></a><span class="fu">qsave</span>(graph, <span class="st">&quot;Data/graph_weighted_7FRC_city_center_pruned.qs&quot;</span>, <span class="at">preset =</span> <span class="st">&quot;high&quot;</span>)</span></code></pre></div>
+</div>
+<div id="build-mesh-for-lgcp-fitting" class="section level2" number="2">
+<h2><span class="header-section-number">2</span> <strong>Build mesh for
+LGCP fitting</strong></h2>
+<p>After constructing the graph, we need to set up the mesh for the LGCP
+model. Even though we do not use the finite element method (FEM) for
+approximating the the Whittle–Matérn field <span
+class="math inline">\(u(s)\)</span>, we still need to set up the mesh
+for LGCP model.</p>
+<p>The mesh is built with a resolution of 100 meters. Before building
+the mesh, we add the data as observations to the graph to avoid placing
+mesh nodes too close. We also normalize the data and set a tolerance of
+0.6 (600 meters) for the duplicated observations.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="co"># Build and setup mesh for graph</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>build_mesh <span class="ot">&lt;-</span> <span class="cf">function</span>(graph, <span class="at">h =</span> <span class="fl">0.1</span>) {</span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>  graph<span class="sc">$</span><span class="fu">build_mesh</span>(<span class="at">h=</span>h)</span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a>  graph<span class="sc">$</span><span class="fu">compute_fem</span>()</span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>}</span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a><span class="co"># Load graph and build mesh</span></span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a>setup_graph_mesh <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a>  graph <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;Data/graph_weighted_7FRC_city_center_pruned.qs&quot;</span>)</span>
+<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;Data/data_all_reasons_with_distances_7FRC.qs&quot;</span>)</span>
+<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a>  </span>
+<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a>  <span class="co"># Add as observation to avoid placing mesh nodes too close</span></span>
+<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a>  rem.obs <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">add_observations</span>(data, <span class="at">normalized =</span> <span class="cn">TRUE</span>, <span class="at">tolerance =</span> <span class="fl">0.6</span>,<span class="at">clear_obs =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a>                                    <span class="at">duplicated_strategy =</span> <span class="st">&quot;jitter&quot;</span>)</span>
+<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a>  graph<span class="sc">$</span><span class="fu">observation_to_vertex</span>(<span class="at">verbose =</span> <span class="dv">1</span>)</span>
+<span id="cb17-16"><a href="#cb17-16" tabindex="-1"></a>  <span class="fu">build_mesh</span>(graph)</span>
+<span id="cb17-17"><a href="#cb17-17" tabindex="-1"></a>  <span class="fu">qsave</span>(graph, <span class="st">&quot;Data/graph_mesh_pruned_100m_7FRC_ver2.qs&quot;</span>)</span>
+<span id="cb17-18"><a href="#cb17-18" tabindex="-1"></a>}</span>
+<span id="cb17-19"><a href="#cb17-19" tabindex="-1"></a><span class="fu">system.time</span>({</span>
+<span id="cb17-20"><a href="#cb17-20" tabindex="-1"></a>  <span class="fu">setup_graph_mesh</span>()</span>
+<span id="cb17-21"><a href="#cb17-21" tabindex="-1"></a>})</span>
+<span id="cb17-22"><a href="#cb17-22" tabindex="-1"></a><span class="co"># user  system elapsed </span></span>
+<span id="cb17-23"><a href="#cb17-23" tabindex="-1"></a><span class="co"># 896.174   9.031 905.481 </span></span></code></pre></div>
+<p>The graph is now ready for the LGCP model fitting. The additional
+step is to prepare the spatial covariates for the LGCP model. We will
+cover this in the next section. If you are interested in the LGCP model
+fitting without covariates, please refer to the <a
+href="model_fitting1.html">Model 1</a> page.</p>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

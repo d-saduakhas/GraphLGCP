@@ -1,0 +1,33 @@
+---
+title: "LGCP on General Metric Graphs"
+---
+
+This website is a companion to the paper **“Log-Gaussian Cox Processes on General Metric Graphs”** by David Bolin, Damilya Saduakhas, and Alexandre B. Simas. The paper is available on [arXiv](https://arxiv.org/abs/2501.18558), and all code is provided in the [GitHub repository](https://github.com/d-saduakhas/GraphLGCP).
+
+---
+
+### **Overview**
+This website provides code and extended examples to **reproduce the traffic accident analysis** from the paper. While raw data cannot be shared, the methodology is demonstrated comprehensively.
+
+### **Key Goals**
+1. **Reproduce Results**: Step-by-step code for fitting LGCPs to traffic accident data.
+2. **Methodology Guide**: Adapt the framework to similar problems (covariates, graph construction).
+3. **Reproducibility**: Templates for inference, and visualization.
+
+---
+
+### **Navigation Guide**
+Use the navbar above to explore the workflow:
+
+- [Graph Setup](graph_setup.html): Build metric graphs from road networks.
+- [Covariates](covariates.html): Prepare traffic/road covariates (speed limits, road type).
+- [LGCP Models](model1.html): Fit Model 1 (spatial effects) and Model 2 (spatial + covariates).
+- [Risk Analysis](exceedance.html): Compute exceedance probabilities for high-risk roads.
+- [Interactive Maps](maps.html): Visualize results spatially.
+
+---
+
+### **Citation**
+Bolin, D., Saduakhas, D., & Simas, A. B. (2025). *Log-Gaussian Cox Processes on General Metric Graphs*. arXiv:2501.18558.
+
+For questions or feedback, visit the [GitHub repository](https://github.com/d-saduakhas/GraphLGCP) or contact the authors.
