@@ -143,7 +143,7 @@ graph$add_observations(
 ```
 ## Creating the Spatial Model
 
-Here we build the `graph_spde' model using the prepared spatial data. The subsequent code stacks the data and fits a log-Gaussian Cox process without covariates. You can choose between 2 different parameterizations: "spde" or "matern". We will use the "spde" parameterization in this example. In case if you want to use the "matern" parameterization, you can change the parameterization argument in the `graph_spde' function and use the code snippet provided in the comments to convert back to `spde' parameterization.
+Here we build the `graph_spde` model using the prepared spatial data. The subsequent code stacks the data and fits a log-Gaussian Cox process without covariates. You can choose between 2 different parameterizations: "spde" or "matern". We will use the "spde" parameterization in this example. In case if you want to use the "matern" parameterization, you can change the parameterization argument in the `graph_spde` function and use the code snippet provided in the comments to convert back to "spde" parameterization.
 
 ```{r}
 # Create the Graph_SPDE model

@@ -576,10 +576,14 @@ locations and additional integration nodes.</p>
 <div id="creating-the-spatial-model" class="section level2" number="3">
 <h2><span class="header-section-number">3</span> Creating the Spatial
 Model</h2>
-<p>Here we build the
-<code>graph_spde' model using the prepared spatial data. The subsequent code stacks the data and fits a log-Gaussian Cox process without covariates. You can choose between 2 different parameterizations: "spde" or "matern". We will use the "spde" parameterization in this example. In case if you want to use the "matern" parameterization, you can change the parameterization argument in the</code>graph_spde’
-function and use the code snippet provided in the comments to convert
-back to `spde’ parameterization.</p>
+<p>Here we build the <code>graph_spde</code> model using the prepared
+spatial data. The subsequent code stacks the data and fits a
+log-Gaussian Cox process without covariates. You can choose between 2
+different parameterizations: “spde” or “matern”. We will use the “spde”
+parameterization in this example. In case if you want to use the
+“matern” parameterization, you can change the parameterization argument
+in the <code>graph_spde</code> function and use the code snippet
+provided in the comments to convert back to “spde” parameterization.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Create the Graph_SPDE model</span></span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co"># Parametrization can either be &quot;spde&quot; or &quot;matern&quot;</span></span>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="fu">system.time</span>(spde_model1 <span class="ot">&lt;-</span> <span class="fu">graph_spde</span>(graph, <span class="at">alpha =</span> alpha, <span class="at">parameterization =</span> <span class="st">&quot;spde&quot;</span>, <span class="at">verbose =</span> <span class="dv">1</span>))</span>
