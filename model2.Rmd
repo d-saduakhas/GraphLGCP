@@ -75,7 +75,12 @@ pre {
 }
 ```
 
-In this section, we fit **Model 2** as described in the paper. This model includes spatial effects and covariates. The details on the covariates used in the analysis are provided in the [Extracting Covariates](covariates.html)  and  [Computing Spatial Covariates](covariates2.html)  sections.
+In this section, we fit **Model 2** as described in the paper, which includes both spatial effects and covariates. The details on the covariates used in the analysis are provided in the [Extracting Covariates](covariates.html)  and  [Computing Spatial Covariates](covariates2.html)  sections.
+
+
+### Data Loading and Graph Preparation
+
+The next code loads libraries and reads in the datasets, including the spatial graph and mesh covariate information. This lays the foundation for subsequent covariate preparation and model building.
 
 ```{r}
 library(MetricGraph)
@@ -90,7 +95,14 @@ mesh_covariates <- qread("Data/mesh_locations_pruned_100m_with_distances_7FRC_ve
 
 # Note that this graph already has the observation to vertex
 summary(graph)
+```
 
+
+### Adding Covariates to the Graph
+
+We now add to the graph with a “Length” covariate and extract the data needed for later steps. Note that, the length covariate is computed as the length of the road segment between two vertices. 
+
+```{r}
 #####################################
 ###### Add covariates to graph ######
 #####################################
@@ -109,7 +121,12 @@ system.time(graph$compute_fem())
 # 717.227   4.772 719.350 
 
 n_accidents <- sum(!is.na(ss$AccidentSeverityId)) # 2482 - total number of accidents
+```
+### Preparing and Normalizing Covariates
 
+Before adding integration points, we prepare covariates by computing additional metrics and normalizing them. This section merges graph and mesh data, applies a min–max normalization, and prepares the dataset for model fitting.
+
+```{r}
 alpha <- 1
 atilde <- graph$mesh$weights
 
@@ -176,9 +193,14 @@ normalized_mesh_data <- normalized_combined_data[(nrow(graph_data) + 1):nrow(com
 # Assign normalized values back to original dataframes
 data_on_graph[, columns_to_normalize] <- normalized_graph_data
 data_on_mesh[, columns_to_normalize] <- normalized_mesh_data
+```
 
+### Adding Observations to the Graph
+
+This section adds the observed locations and integration points into the graph. The observed points are enriched with the covariates from the graph data while the integration points use the corresponding mesh data.
+
+```{r}
 atilde <- graph$mesh$weights
-
 
 graph$clear_observations()
 # Add the locations which are observed
@@ -269,8 +291,13 @@ graph$add_observations(
   ),
   normalized = TRUE
 )
+```
 
+### Exploratory Correlation Analysis
 
+Before modeling, we check the correlation among covariates. The following code produces several correlation plots to help decide which variables to include.
+
+```{r}
 df = graph$get_data()
 # CHECK CORRELATION before fitting the model
 png("Figures/4Corrplot_model3_all.png", height = 10, width = 10, units = "in", res = 300)
@@ -299,10 +326,21 @@ dev.off()
 png("Figures/4Corrplot_model3_inv_sqrt_dist.png", height = 10, width = 10, units = "in", res = 300)
 corrplot::corrplot(cor(data_rep[,c(3:10,12,28:32)]), method = "color",addCoef.col = "black", type = "upper")
 dev.off()
+```
 
+### Building the SPDE Model
+
+Next, we create the SPDE model using the graph object with covariates. The code here sets up the necessary spatial model structure that will later be incorporated into the INLA stacks.
+```{r}
 system.time(spde_model2 <- graph_spde(graph, alpha = alpha, parameterization = "spde", verbose = 1))
 data_spde2 <- graph_data_spde(graph_spde = spde_model2, name = "field")
+```
 
+### Fitting Multiple Model Formulations
+
+We now form the INLA stack and fit several models with different covariate formulations. This part demonstrates alternative model specifications, allowing for later comparison of their performance.
+
+```{r}
 ##########################
 ###### Fit model #########
 ##########################
@@ -343,7 +381,7 @@ stk2 <- inla.stack(
   tag = "data"
 )
 
-
+# Fit a series of models with various covariate combinations
 # Model 1 as described in paper 
 spde_fit2_1 <- inla(y ~ -1 + Intercept + f(field, model = spde_model2),
                    family = "poisson", data = inla.stack.data(stk2),
@@ -432,6 +470,10 @@ spde_fit2_7_2 <- inla(y ~ -1 + Intercept + intensity + road_type1 +
 
 ```
 
+### Visualizing Credible Intervals
+
+For each model we extract the 95% credible intervals of key covariates. The following loop produces simple interval plots to assess significance.
+
 ```{r}
 plotCredibleInterval <- function(spde_fit) {
   # Extract the intervals
@@ -483,7 +525,10 @@ for (i in 1:7) {
 plot(df_mean$kappa, df_mean$tau, xlab = "kappa", ylab = "tau", main = "Model Comparison")
 ```
 
-The final model that we report in the paper is `spde_fit2_5`. We can now extract the results of the model and plot the intensity and latent field. The function `plot_and_save_results` is defined below to plot and save the results.
+### Extracting and Plotting Final Model Results
+
+We now extract the results from our chosen final model (`spde_fit2_5`), compute parameter summaries, and visualize the posterior distributions. This final block also includes saving plots of the spatial intensity and latent field.
+
 ```{r}
 
 spde_result <- spde_metric_graph_result(spde_fit2_5, "field", spde_model2)
@@ -535,24 +580,23 @@ ggplot(posterior_df_fit) +
  labs(y = "Density")
   
 ```
+### Plotting and Saving Spatial Outputs
 
+Finally, we plot and save various spatial outputs (intensity maps and latent field plots). 
 ```{r}
+###### Extracting results ######
+# summary.random - contains the posterior mean of the unstructured random effect, u(s)
+# summary.fitted.values - contains the predicted intensity (mean number of events per unit area), lambda
+# summary.linear.predictor - contains the posterior mean of the linear predictor, log(lambda)
 
- 
- 
- ###### Extracting results ######
- # summary.random - contains the posterior mean of the unstructured random effect, u(s)
- # summary.fitted.values - contains the predicted intensity (mean number of events per unit area), lambda
- # summary.linear.predictor - contains the posterior mean of the linear predictor, log(lambda)
- 
- library(scico)
- library(gridExtra)
- library(ggplot2)
- library(gridExtra)
- library(viridis)
+library(scico)
+library(gridExtra)
+library(ggplot2)
+library(gridExtra)
+library(viridis)
 library(RColorBrewer)
  # Function to plot and save results
- plot_and_save_results <- function(fit_object, graph, stk, file_prefix) {
+plot_and_save_results <- function(fit_object, graph, stk, file_prefix) {
    # Extracting intensity results
    index <- inla.stack.index(stk, tag = "data")$effect
    lambda_mean <- fit_object$summary.fitted.values[index, "mean"]
@@ -599,7 +643,20 @@ library(RColorBrewer)
    print(p32)
    dev.off()
  }
- plot_and_save_results(spde_fit2_5, graph, stk2, "Figures/5Graph_model2_alpha1_7FRC_pruned_exact_100m")
+ plot_and_save_results(spde_fit2_5, graph, stk2, "Figures/5Graph_model2_alpha1_7FRC_pruned_exact_100m_ver5")
  
 ```
+
+
+The model results are visualized in the following plots:
+1. **Latent Field Plot Variations**:
+```{r, eval=TRUE, echo=FALSE}
+ knitr::include_graphics("Figures/5Graph_model2_alpha1_7FRC_pruned_exact_100m_posterior_u_vikO.png")
+
+```  
+
+2. **Log-Intensity Plot**:
+```{r, eval=TRUE, echo=FALSE}
+ knitr::include_graphics("Figures/5Graph_model2_alpha1_7FRC_pruned_exact_100m_ver5_log_intensity2.png")
+```  
 

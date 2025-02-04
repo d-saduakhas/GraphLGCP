@@ -120,6 +120,12 @@ hist(tomtom$SpeedLimit)
 unique(tomtom$SpeedLimit)
 ```
 
+The full data derived from the TomTom contains 256,745 road segments, and covers spatially all accidents in the dataset. We will filter the data to include only the road segments within the city center of Ahsa, to reduce the computational load. The map of the whole data is shown below colored according to road class.
+
+```{r, echo=FALSE, results='asis'}
+cat('<iframe src="road_class_map.html" width="100%" height="600px" style="border:none;"></iframe>')
+```
+
 The speed limit values are not rounded to the nearest 10, which is common in practice. We will round the speed limit values and compute the traffic intensity based on the speed limit, road length, and functional road class (FRC). The traffic intensity is a measure of traffic flow on a road segment, which we will use as a covariate in the LGCP model.
 
 ```{r}
@@ -208,13 +214,22 @@ system.time({
 qsave(graph, "Data/graph_weighted_7FRC_city_center_pruned.qs", preset = "high")
 ```
 
+The summary of the pruned graph is shown below. The graph has 67223 vertices and 164586 edges. 
+```{r}
+graph <- qread(here("Data/graph_weighted_7FRC_city_center_pruned.qs"))
+summary(graph)
+```
+The graph is visualized using the `mapview` package.
+```{r}
+graph$plot(vertex_size = 0, type = "mapview", edge_width = 0.05,edge_color = "blue")
+```
+
 ## **Build mesh for LGCP fitting**
 
 After constructing the graph, we need to set up the mesh for the LGCP model. 
 Even though we do not use the finite element method (FEM) for approximating the the Whittle--Matérn field $u(s)$, we still need to set up the mesh for LGCP model.
 
 The mesh is built with a resolution of 100 meters. Before building the mesh, we add the data as observations to the graph to avoid placing mesh nodes too close. We also normalize the data and set a tolerance of 0.6 (600 meters) for the duplicated observations. 
-
 
 ```{r, eval=FALSE}
 # Build and setup mesh for graph
@@ -243,4 +258,4 @@ system.time({
 
 ```
 
-The graph is now ready for the LGCP model fitting. The additional step is to prepare the spatial covariates for the LGCP model. We will cover this in the next section. If you are interested in the LGCP model fitting without covariates, please refer to the [Model 1](model_fitting1.html) page.
+The graph is now ready for the LGCP model fitting. The additional step is to prepare the spatial covariates for the LGCP model. We will cover this in the next section. If you are interested in the LGCP model fitting without covariates, please refer to the [Model 1](model1.html) page.

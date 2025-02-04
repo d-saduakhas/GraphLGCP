@@ -77,6 +77,11 @@ pre {
 
 In this section, we fit **Model 1** as described in the paper. This model includes only spatial effects, without any covariates. 
 
+## Data Loading and Graph Preparation
+
+This part loads the required libraries, reads the data and graph files, and builds a mesh using the graph structure. The operations prepare the spatial framework needed for the subsequent modeling steps.
+
+
 ```{r}
 library(MetricGraph)
 library(INLA)
@@ -101,7 +106,13 @@ graph$clear_observations()
 system.time(graph$compute_fem())
 
 n_accidents <- sum(!is.na(ss$AccidentSeverityId)) # 2482 - total number of accidents
+```
 
+## Preparing the Spatial Observations
+
+Before fitting the model, we prepare the spatial observations by defining integration points and associating them with the mesh. This segmentation allows the model to differentiate between observed locations and additional integration nodes.
+
+```{r}
 alpha <- 1
 atilde <- graph$mesh$weights
 
@@ -129,8 +140,12 @@ graph$add_observations(
   ),
   normalized = TRUE
 )
-graph$plot(data = "y", vertex_size = 0, edge_width = 0.1)
+```
+## Creating the Spatial Model
 
+Here we build the `graph_spde' model using the prepared spatial data. The subsequent code stacks the data and fits a log-Gaussian Cox process without covariates. You can choose between 2 different parameterizations: "spde" or "matern". We will use the "spde" parameterization in this example. In case if you want to use the "matern" parameterization, you can change the parameterization argument in the `graph_spde' function and use the code snippet provided in the comments to convert back to `spde' parameterization.
+
+```{r}
 # Create the Graph_SPDE model
 # Parametrization can either be "spde" or "matern"
 system.time(spde_model1 <- graph_spde(graph, alpha = alpha, parameterization = "spde", verbose = 1))
@@ -199,7 +214,9 @@ ggplot(posterior_df_fit) +
 save.image("Data/5Fit_model1_alpha1_exact_100m.RData")
 ```
 
-Let's plot the results of the model fitting.
+## Visualizing Model Results
+
+The final section extracts and visualizes the model's predictions, including the intensity and latent field. Several plotting styles are applied, and the plots are saved as image files for further review.
 ```{r}
 ###### Extracting results ######
 # summary.random - contains the posterior mean of the unstructured random effect, u(s)
@@ -252,11 +269,6 @@ plot_and_save_results <- function(fit_object, graph, stk, file_prefix) {
 
   #### Log-Intensity Plot ####
   log_lambda <- fit_object$summary.linear.predictor[index, "mean"]
-  png(paste0(file_prefix, "_log_intensity.png"), height = 3 * 700, width = 3 * 900, res = 300)
-  p3 <- graph$plot_function(X = log_lambda, vertex_size = 0, edge_width = 0.1, scale_color = scale_color_scico(palette = "vik", midpoint = 0)) +
-    ggtitle(expression(~ log(lambda))) + theme_minimal()
-  print(p3)
-  dev.off()
 
   png(paste0(file_prefix, "_log_intensity2.png"), height = 3 * 700, width = 3 * 900, res = 300)
   p32 <- graph$plot_function(X = log_lambda, vertex_size = 0, edge_width = 0.2, scale_color = scale_color_scico(palette = "vik", midpoint = 0)) +
@@ -267,5 +279,34 @@ plot_and_save_results <- function(fit_object, graph, stk, file_prefix) {
 plot_and_save_results(spde_fit1_no_repl, graph, stk1_no_repl, "Figures/5Graph_model1_alpha1_7FRC_pruned_exact_100m")
 
 ```
+
+
+The model results are visualized in the following plots:
+
+1. **Intensity Plot Variations**:
+   - Colormap 1: vik (scico)
+```{r, eval=TRUE, echo=FALSE}
+ knitr::include_graphics("Figures/5Graph_model1_alpha1_7FRC_pruned_exact_100m_intensity_vik_minimal.png")
+```
+
+   - Colormap 2: viridis
+```{r, eval=TRUE, echo=FALSE}
+ knitr::include_graphics("Figures/5Graph_model1_alpha1_7FRC_pruned_exact_100m_intensity_viridis.png")
+```   
+
+   - Colormap 4: plasma (viridis)
+```{r, eval=TRUE, echo=FALSE}
+ knitr::include_graphics("Figures/5Graph_model1_alpha1_7FRC_pruned_exact_100m_intensity_plasma.png")
+```    
+
+2. **Latent Field Plot Variations**:
+```{r, eval=TRUE, echo=FALSE}
+ knitr::include_graphics("Figures/5Graph_model1_alpha1_7FRC_pruned_exact_100m_posterior_u.png")
+```  
+
+3. **Log-Intensity Plot**:
+```{r, eval=TRUE, echo=FALSE}
+ knitr::include_graphics("Figures/5Graph_model1_alpha1_7FRC_pruned_exact_100m_log_intensity2.png")
+```  
 
 

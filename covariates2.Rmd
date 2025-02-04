@@ -76,12 +76,11 @@ pre {
 ```
 
 
-We now continue building a spatial covariate dataset for LGCP model. Given the file `additional_city_objects.RData' built in the previous step (see [Covariate Extraction](covariates.html)), we will compute the distances to the nearest objects and transformations based on them. The distances can be computed either using the Euclidean distance or the shortest path distance, i.e. geodesic. In this case, we will use the Euclidean distance, but we also provide the code for computing the shortest path distance.
+We now continue building a spatial covariate dataset for LGCP model. Given the file `additional_city_objects.RData' built in the previous step (see [Covariate Extraction](covariates.html)), we will compute the distances to the nearest objects and transformations based on them. The distances can be computed either using the Euclidean distance or the shortest path distance, i.e. geodesic. In this case, we will use the Euclidean distance, due to computational constraints.
 
+# Using the Euclidean distances 
 
-#  Option 1: Using the Euclidean distances 
-
-We will first start by computing the distances to the nearest objects for each accident location. Then for our Model 2, we have to additionally compute the distances to the nearest objects for each mesh location. This is a crucial step in the LGCP model, as the spatial covariates have to be available for both the accidents and the mesh locations. It is therfore crucial to select the appropriate covariates that will be available or can be computed for the whole spatial domain.
+We will first start by computing the distances to the nearest objects for each accident location. Then for our Model 2, we have to additionally compute the distances to the nearest objects for each mesh location. This is a crucial step in the LGCP model, as the spatial covariates have to be available for both the accidents and the mesh locations. It is therefore crucial to select the appropriate covariates that will be available or can be computed for the whole spatial domain.
 
 ```{r}
 library(osmdata)
@@ -325,6 +324,4 @@ dev.off()
 ```
 
 
-
-#  Option 2: Using the Geodesic distances 
 
