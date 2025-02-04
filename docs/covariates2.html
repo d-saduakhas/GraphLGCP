@@ -508,18 +508,17 @@ step (see <a href="covariates.html">Covariate Extraction</a>), we will
 compute the distances to the nearest objects and transformations based
 on them. The distances can be computed either using the Euclidean
 distance or the shortest path distance, i.e. geodesic. In this case, we
-will use the Euclidean distance, but we also provide the code for
-computing the shortest path distance.</p>
-<div id="option-1-using-the-euclidean-distances" class="section level1"
+will use the Euclidean distance, due to computational constraints.</p>
+<div id="using-the-euclidean-distances" class="section level1"
 number="1">
-<h1><span class="header-section-number">1</span> Option 1: Using the
-Euclidean distances</h1>
+<h1><span class="header-section-number">1</span> Using the Euclidean
+distances</h1>
 <p>We will first start by computing the distances to the nearest objects
 for each accident location. Then for our Model 2, we have to
 additionally compute the distances to the nearest objects for each mesh
 location. This is a crucial step in the LGCP model, as the spatial
 covariates have to be available for both the accidents and the mesh
-locations. It is therfore crucial to select the appropriate covariates
+locations. It is therefore crucial to select the appropriate covariates
 that will be available or can be computed for the whole spatial
 domain.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(osmdata)</span>
@@ -741,11 +740,6 @@ for each mesh location</h2>
 <span id="cb8-54"><a href="#cb8-54" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Distance to the Nearest Bank or ATM with Exponential Decay&quot;</span>, <span class="at">color =</span> <span class="st">&quot;&quot;</span>)</span>
 <span id="cb8-55"><a href="#cb8-55" tabindex="-1"></a><span class="fu">dev.off</span>()</span></code></pre></div>
 </div>
-</div>
-<div id="option-2-using-the-geodesic-distances" class="section level1"
-number="2">
-<h1><span class="header-section-number">2</span> Option 2: Using the
-Geodesic distances</h1>
 </div>
 
 
