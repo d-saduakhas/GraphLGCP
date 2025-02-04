@@ -48,8 +48,6 @@ pre {
 }
 ```
 
-Go back to the [About page](about.html).
-
 ## **Building the Metric Graph**
 
 In this section, we construct the metric graph for the road network. The graph is the foundation for all subsequent analyses.
