@@ -644,89 +644,81 @@ data.</p>
 <span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  <span class="at">data =</span> <span class="fu">data.frame</span>(</span>
 <span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>    <span class="at">y =</span> <span class="fu">rep</span>(<span class="dv">1</span>, <span class="fu">length</span>(ind.dat)),</span>
 <span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>    <span class="at">e =</span> atilde[ind.dat],</span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>    <span class="at">Length =</span> data_on_graph<span class="sc">$</span>Length,</span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>    <span class="at">SpeedLimit =</span> data_on_graph<span class="sc">$</span>SpeedLimit,</span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>    <span class="at">FRC1 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC1,</span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>    <span class="at">FRC2 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC2,</span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>    <span class="at">FRC3 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC3,</span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>    <span class="at">FRC4 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC4,</span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>    <span class="at">FRC5 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC5,</span>
-<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a>    <span class="at">FRC6 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC6,</span>
-<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>    <span class="at">FRC7 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC7,</span>
-<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a>    <span class="at">TrafficIntensity =</span> data_on_graph<span class="sc">$</span>TrafficIntensity,</span>
-<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a>    <span class="at">exp_dist_mosque =</span> data_on_graph<span class="sc">$</span>exp_decay_distance_to_mosque,</span>
-<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a>    <span class="at">exp_dist_education =</span> data_on_graph<span class="sc">$</span>exp_decay_distance_to_education,</span>
-<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a>    <span class="at">exp_dist_finance =</span> data_on_graph<span class="sc">$</span>exp_decay_distance_to_finance,</span>
-<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a>    <span class="at">exp_dist_hospital =</span> data_on_graph<span class="sc">$</span>exp_decay_distance_to_hospital,</span>
-<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a>    <span class="at">exp_dist_intersection =</span> data_on_graph<span class="sc">$</span>exp_decay_distance_to_intersection,</span>
-<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a>    <span class="at">exp_double_dist_mosque =</span> data_on_graph<span class="sc">$</span>exp_decay_double_distance_to_mosque,</span>
-<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a>    <span class="at">exp_double_dist_education =</span> data_on_graph<span class="sc">$</span>exp_decay_double_distance_to_education,</span>
-<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a>    <span class="at">exp_double_dist_finance =</span> data_on_graph<span class="sc">$</span>exp_decay_double_distance_to_finance,</span>
-<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a>    <span class="at">exp_double_dist_hospital =</span> data_on_graph<span class="sc">$</span>exp_decay_double_distance_to_hospital,</span>
-<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a>    <span class="at">exp_double_dist_intersection =</span> data_on_graph<span class="sc">$</span>exp_decay_double_distance_to_intersection,</span>
-<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a>    <span class="at">log_dist_mosque =</span> data_on_graph<span class="sc">$</span>log_distance_to_mosque,</span>
-<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a>    <span class="at">log_dist_education =</span> data_on_graph<span class="sc">$</span>log_distance_to_education,</span>
-<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a>    <span class="at">log_dist_finance =</span> data_on_graph<span class="sc">$</span>log_distance_to_finance,</span>
-<span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a>    <span class="at">log_dist_hospital =</span> data_on_graph<span class="sc">$</span>log_distance_to_hospital,</span>
-<span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a>    <span class="at">log_dist_intersection =</span> data_on_graph<span class="sc">$</span>log_distance_to_intersection,</span>
-<span id="cb4-34"><a href="#cb4-34" tabindex="-1"></a>    <span class="at">inv_sqrt_dist_mosque =</span> data_on_graph<span class="sc">$</span>inv_sqrt_distance_to_mosque,</span>
-<span id="cb4-35"><a href="#cb4-35" tabindex="-1"></a>    <span class="at">inv_sqrt_dist_education =</span> data_on_graph<span class="sc">$</span>inv_sqrt_distance_to_education,</span>
-<span id="cb4-36"><a href="#cb4-36" tabindex="-1"></a>    <span class="at">inv_sqrt_dist_finance =</span> data_on_graph<span class="sc">$</span>inv_sqrt_distance_to_finance,</span>
-<span id="cb4-37"><a href="#cb4-37" tabindex="-1"></a>    <span class="at">inv_sqrt_dist_hospital =</span> data_on_graph<span class="sc">$</span>inv_sqrt_distance_to_hospital,</span>
-<span id="cb4-38"><a href="#cb4-38" tabindex="-1"></a>    <span class="at">inv_sqrt_dist_intersection =</span> data_on_graph<span class="sc">$</span>inv_sqrt_distance_to_intersection,</span>
-<span id="cb4-39"><a href="#cb4-39" tabindex="-1"></a>    <span class="at">edge_number =</span> data_on_graph<span class="sc">$</span>.edge_number,</span>
-<span id="cb4-40"><a href="#cb4-40" tabindex="-1"></a>    <span class="at">distance_on_edge =</span> data_on_graph<span class="sc">$</span>.distance_on_edge</span>
-<span id="cb4-41"><a href="#cb4-41" tabindex="-1"></a>  ),</span>
-<span id="cb4-42"><a href="#cb4-42" tabindex="-1"></a>  <span class="at">normalized =</span> <span class="cn">TRUE</span></span>
-<span id="cb4-43"><a href="#cb4-43" tabindex="-1"></a>)</span>
-<span id="cb4-44"><a href="#cb4-44" tabindex="-1"></a></span>
-<span id="cb4-45"><a href="#cb4-45" tabindex="-1"></a><span class="co"># Subset the data_on_mesh to include correct indices</span></span>
-<span id="cb4-46"><a href="#cb4-46" tabindex="-1"></a>data_on_mesh_copy <span class="ot">=</span> data_on_mesh</span>
-<span id="cb4-47"><a href="#cb4-47" tabindex="-1"></a>data_on_mesh <span class="ot">=</span> data_on_mesh[ind.add,]</span>
-<span id="cb4-48"><a href="#cb4-48" tabindex="-1"></a>road_types_graph_mesh_dummy_copy <span class="ot">=</span> road_types_graph_mesh_dummy</span>
-<span id="cb4-49"><a href="#cb4-49" tabindex="-1"></a>road_types_graph_mesh_dummy <span class="ot">=</span> road_types_graph_mesh_dummy[ind.add,]</span>
-<span id="cb4-50"><a href="#cb4-50" tabindex="-1"></a></span>
-<span id="cb4-51"><a href="#cb4-51" tabindex="-1"></a></span>
-<span id="cb4-52"><a href="#cb4-52" tabindex="-1"></a><span class="co"># Add the remaining integration points</span></span>
-<span id="cb4-53"><a href="#cb4-53" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">add_observations</span>(</span>
-<span id="cb4-54"><a href="#cb4-54" tabindex="-1"></a>  <span class="at">data =</span> <span class="fu">data.frame</span>(</span>
-<span id="cb4-55"><a href="#cb4-55" tabindex="-1"></a>    <span class="at">y =</span> <span class="fu">rep</span>(<span class="dv">0</span>, <span class="fu">length</span>(ind.add)),</span>
-<span id="cb4-56"><a href="#cb4-56" tabindex="-1"></a>    <span class="at">e =</span> atilde[ind.add],</span>
-<span id="cb4-57"><a href="#cb4-57" tabindex="-1"></a>    <span class="at">Length =</span> data_on_mesh<span class="sc">$</span>Length,</span>
-<span id="cb4-58"><a href="#cb4-58" tabindex="-1"></a>    <span class="at">SpeedLimit =</span> data_on_mesh<span class="sc">$</span>SpeedLimit,</span>
-<span id="cb4-59"><a href="#cb4-59" tabindex="-1"></a>    <span class="at">FRC1 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC1,</span>
-<span id="cb4-60"><a href="#cb4-60" tabindex="-1"></a>    <span class="at">FRC2 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC2,</span>
-<span id="cb4-61"><a href="#cb4-61" tabindex="-1"></a>    <span class="at">FRC3 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC3,</span>
-<span id="cb4-62"><a href="#cb4-62" tabindex="-1"></a>    <span class="at">FRC4 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC4,</span>
-<span id="cb4-63"><a href="#cb4-63" tabindex="-1"></a>    <span class="at">FRC5 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC5,</span>
-<span id="cb4-64"><a href="#cb4-64" tabindex="-1"></a>    <span class="at">FRC6 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC6,</span>
-<span id="cb4-65"><a href="#cb4-65" tabindex="-1"></a>    <span class="at">FRC7 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC7,                                      </span>
-<span id="cb4-66"><a href="#cb4-66" tabindex="-1"></a>    <span class="at">TrafficIntensity =</span> data_on_mesh<span class="sc">$</span>TrafficIntensity,</span>
-<span id="cb4-67"><a href="#cb4-67" tabindex="-1"></a>    <span class="at">exp_dist_mosque =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_mosque,</span>
-<span id="cb4-68"><a href="#cb4-68" tabindex="-1"></a>    <span class="at">exp_dist_education =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_education,</span>
-<span id="cb4-69"><a href="#cb4-69" tabindex="-1"></a>    <span class="at">exp_dist_finance =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_finance,</span>
-<span id="cb4-70"><a href="#cb4-70" tabindex="-1"></a>    <span class="at">exp_dist_hospital =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_hospital,</span>
-<span id="cb4-71"><a href="#cb4-71" tabindex="-1"></a>    <span class="at">exp_dist_intersection =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_intersection,</span>
-<span id="cb4-72"><a href="#cb4-72" tabindex="-1"></a>    <span class="at">exp_double_dist_mosque =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_mosque,</span>
-<span id="cb4-73"><a href="#cb4-73" tabindex="-1"></a>    <span class="at">exp_double_dist_education =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_education,</span>
-<span id="cb4-74"><a href="#cb4-74" tabindex="-1"></a>    <span class="at">exp_double_dist_finance =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_finance,</span>
-<span id="cb4-75"><a href="#cb4-75" tabindex="-1"></a>    <span class="at">exp_double_dist_hospital =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_hospital,</span>
-<span id="cb4-76"><a href="#cb4-76" tabindex="-1"></a>    <span class="at">exp_double_dist_intersection =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_intersection,</span>
-<span id="cb4-77"><a href="#cb4-77" tabindex="-1"></a>    <span class="at">log_dist_mosque =</span> data_on_mesh<span class="sc">$</span>log_distance_to_mosque,</span>
-<span id="cb4-78"><a href="#cb4-78" tabindex="-1"></a>    <span class="at">log_dist_education =</span> data_on_mesh<span class="sc">$</span>log_distance_to_education,</span>
-<span id="cb4-79"><a href="#cb4-79" tabindex="-1"></a>    <span class="at">log_dist_finance =</span> data_on_mesh<span class="sc">$</span>log_distance_to_finance,</span>
-<span id="cb4-80"><a href="#cb4-80" tabindex="-1"></a>    <span class="at">log_dist_hospital =</span> data_on_mesh<span class="sc">$</span>log_distance_to_hospital,</span>
-<span id="cb4-81"><a href="#cb4-81" tabindex="-1"></a>    <span class="at">log_dist_intersection =</span> data_on_mesh<span class="sc">$</span>log_distance_to_intersection,</span>
-<span id="cb4-82"><a href="#cb4-82" tabindex="-1"></a>    <span class="at">inv_sqrt_dist_mosque =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_mosque,</span>
-<span id="cb4-83"><a href="#cb4-83" tabindex="-1"></a>    <span class="at">inv_sqrt_dist_education =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_education,</span>
-<span id="cb4-84"><a href="#cb4-84" tabindex="-1"></a>    <span class="at">inv_sqrt_dist_finance =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_finance,</span>
-<span id="cb4-85"><a href="#cb4-85" tabindex="-1"></a>    <span class="at">inv_sqrt_dist_hospital =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_hospital,</span>
-<span id="cb4-86"><a href="#cb4-86" tabindex="-1"></a>    <span class="at">inv_sqrt_dist_intersection =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_intersection,</span>
-<span id="cb4-87"><a href="#cb4-87" tabindex="-1"></a>    <span class="at">edge_number =</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>VtE[ind.add, <span class="dv">1</span>],</span>
-<span id="cb4-88"><a href="#cb4-88" tabindex="-1"></a>    <span class="at">distance_on_edge =</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>VtE[ind.add, <span class="dv">2</span>]</span>
-<span id="cb4-89"><a href="#cb4-89" tabindex="-1"></a>  ),</span>
-<span id="cb4-90"><a href="#cb4-90" tabindex="-1"></a>  <span class="at">normalized =</span> <span class="cn">TRUE</span></span>
-<span id="cb4-91"><a href="#cb4-91" tabindex="-1"></a>)</span></code></pre></div>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>    <span class="at">Intercept =</span> <span class="dv">1</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>    <span class="at">length =</span> data_on_graph<span class="sc">$</span>Length,</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>    <span class="at">speed_limit =</span> data_on_graph<span class="sc">$</span>SpeedLimit,</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>    <span class="at">road_type1 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC1,</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>    <span class="at">road_type2 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC2,</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>    <span class="at">road_type3 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC3,</span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>    <span class="at">road_type4 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC4,</span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a>    <span class="at">road_type5 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC5,</span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>    <span class="at">road_type6 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC6,</span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a>    <span class="at">road_type7 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC7,</span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a>    <span class="at">intensity =</span> data_on_graph<span class="sc">$</span>TrafficIntensity,</span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a>    <span class="at">dist_mosque =</span> data_on_graph<span class="sc">$</span>exp_decay_distance_to_mosque,</span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a>    <span class="at">dist_education =</span> data_on_graph<span class="sc">$</span>exp_decay_distance_to_education,</span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a>    <span class="at">dist_finance =</span> data_on_graph<span class="sc">$</span>exp_decay_distance_to_finance,</span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a>    <span class="at">dist_hospital =</span> data_on_graph<span class="sc">$</span>exp_decay_distance_to_hospital,</span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a>    <span class="at">dist_intersection =</span> data_on_graph<span class="sc">$</span>exp_decay_distance_to_intersection,</span>
+<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a>    <span class="at">double_dist_mosque =</span> data_on_graph<span class="sc">$</span>exp_decay_double_distance_to_mosque,</span>
+<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a>    <span class="at">double_dist_education =</span> data_on_graph<span class="sc">$</span>exp_decay_double_distance_to_education,</span>
+<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a>    <span class="at">double_dist_finance =</span> data_on_graph<span class="sc">$</span>exp_decay_double_distance_to_finance,</span>
+<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a>    <span class="at">double_dist_hospital =</span> data_on_graph<span class="sc">$</span>exp_decay_double_distance_to_hospital,</span>
+<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a>    <span class="at">double_dist_intersection =</span> data_on_graph<span class="sc">$</span>exp_decay_double_distance_to_intersection,</span>
+<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a>    <span class="at">invsqrt_dist_mosque =</span> data_on_graph<span class="sc">$</span>inv_sqrt_distance_to_mosque,</span>
+<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a>    <span class="at">invsqrt_dist_education =</span> data_on_graph<span class="sc">$</span>inv_sqrt_distance_to_education,</span>
+<span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a>    <span class="at">invsqrt_dist_finance =</span> data_on_graph<span class="sc">$</span>inv_sqrt_distance_to_finance,</span>
+<span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a>    <span class="at">invsqrt_dist_hospital =</span> data_on_graph<span class="sc">$</span>inv_sqrt_distance_to_hospital,</span>
+<span id="cb4-34"><a href="#cb4-34" tabindex="-1"></a>    <span class="at">invsqrt_dist_intersection =</span> data_on_graph<span class="sc">$</span>inv_sqrt_distance_to_intersection,</span>
+<span id="cb4-35"><a href="#cb4-35" tabindex="-1"></a>    <span class="at">edge_number =</span> data_on_graph<span class="sc">$</span>.edge_number,</span>
+<span id="cb4-36"><a href="#cb4-36" tabindex="-1"></a>    <span class="at">distance_on_edge =</span> data_on_graph<span class="sc">$</span>.distance_on_edge</span>
+<span id="cb4-37"><a href="#cb4-37" tabindex="-1"></a>  ),</span>
+<span id="cb4-38"><a href="#cb4-38" tabindex="-1"></a>  <span class="at">normalized =</span> <span class="cn">TRUE</span></span>
+<span id="cb4-39"><a href="#cb4-39" tabindex="-1"></a>)</span>
+<span id="cb4-40"><a href="#cb4-40" tabindex="-1"></a></span>
+<span id="cb4-41"><a href="#cb4-41" tabindex="-1"></a><span class="co"># Subset the data_on_mesh to include correct indices</span></span>
+<span id="cb4-42"><a href="#cb4-42" tabindex="-1"></a>data_on_mesh_copy <span class="ot">=</span> data_on_mesh</span>
+<span id="cb4-43"><a href="#cb4-43" tabindex="-1"></a>data_on_mesh <span class="ot">=</span> data_on_mesh[ind.add,]</span>
+<span id="cb4-44"><a href="#cb4-44" tabindex="-1"></a>road_types_graph_mesh_dummy_copy <span class="ot">=</span> road_types_graph_mesh_dummy</span>
+<span id="cb4-45"><a href="#cb4-45" tabindex="-1"></a>road_types_graph_mesh_dummy <span class="ot">=</span> road_types_graph_mesh_dummy[ind.add,]</span>
+<span id="cb4-46"><a href="#cb4-46" tabindex="-1"></a></span>
+<span id="cb4-47"><a href="#cb4-47" tabindex="-1"></a></span>
+<span id="cb4-48"><a href="#cb4-48" tabindex="-1"></a><span class="co"># Add the remaining integration points</span></span>
+<span id="cb4-49"><a href="#cb4-49" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">add_observations</span>(</span>
+<span id="cb4-50"><a href="#cb4-50" tabindex="-1"></a>  <span class="at">data =</span> <span class="fu">data.frame</span>(</span>
+<span id="cb4-51"><a href="#cb4-51" tabindex="-1"></a>    <span class="at">y =</span> <span class="fu">rep</span>(<span class="dv">0</span>, <span class="fu">length</span>(ind.add)),</span>
+<span id="cb4-52"><a href="#cb4-52" tabindex="-1"></a>    <span class="at">e =</span> atilde[ind.add],</span>
+<span id="cb4-53"><a href="#cb4-53" tabindex="-1"></a>    <span class="at">Intercept =</span> <span class="dv">1</span>,</span>
+<span id="cb4-54"><a href="#cb4-54" tabindex="-1"></a>    <span class="at">length =</span> data_on_mesh<span class="sc">$</span>Length,</span>
+<span id="cb4-55"><a href="#cb4-55" tabindex="-1"></a>    <span class="at">speed_limit =</span> data_on_mesh<span class="sc">$</span>SpeedLimit,</span>
+<span id="cb4-56"><a href="#cb4-56" tabindex="-1"></a>    <span class="at">road_type1 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC1,</span>
+<span id="cb4-57"><a href="#cb4-57" tabindex="-1"></a>    <span class="at">road_type2 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC2,</span>
+<span id="cb4-58"><a href="#cb4-58" tabindex="-1"></a>    <span class="at">road_type3 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC3,</span>
+<span id="cb4-59"><a href="#cb4-59" tabindex="-1"></a>    <span class="at">road_type4 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC4,</span>
+<span id="cb4-60"><a href="#cb4-60" tabindex="-1"></a>    <span class="at">road_type5 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC5,</span>
+<span id="cb4-61"><a href="#cb4-61" tabindex="-1"></a>    <span class="at">road_type6 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC6,</span>
+<span id="cb4-62"><a href="#cb4-62" tabindex="-1"></a>    <span class="at">road_type7 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC7,                                      </span>
+<span id="cb4-63"><a href="#cb4-63" tabindex="-1"></a>    <span class="at">intensity =</span> data_on_mesh<span class="sc">$</span>TrafficIntensity,</span>
+<span id="cb4-64"><a href="#cb4-64" tabindex="-1"></a>    <span class="at">dist_mosque =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_mosque,</span>
+<span id="cb4-65"><a href="#cb4-65" tabindex="-1"></a>    <span class="at">dist_education =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_education,</span>
+<span id="cb4-66"><a href="#cb4-66" tabindex="-1"></a>    <span class="at">dist_finance =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_finance,</span>
+<span id="cb4-67"><a href="#cb4-67" tabindex="-1"></a>    <span class="at">dist_hospital =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_hospital,</span>
+<span id="cb4-68"><a href="#cb4-68" tabindex="-1"></a>    <span class="at">dist_intersection =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_intersection,</span>
+<span id="cb4-69"><a href="#cb4-69" tabindex="-1"></a>    <span class="at">double_dist_mosque =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_mosque,</span>
+<span id="cb4-70"><a href="#cb4-70" tabindex="-1"></a>    <span class="at">double_dist_education =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_education,</span>
+<span id="cb4-71"><a href="#cb4-71" tabindex="-1"></a>    <span class="at">double_dist_finance =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_finance,</span>
+<span id="cb4-72"><a href="#cb4-72" tabindex="-1"></a>    <span class="at">double_dist_hospital =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_hospital,</span>
+<span id="cb4-73"><a href="#cb4-73" tabindex="-1"></a>    <span class="at">double_dist_intersection =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_intersection,</span>
+<span id="cb4-74"><a href="#cb4-74" tabindex="-1"></a>    <span class="at">invsqrt_dist_mosque =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_mosque,</span>
+<span id="cb4-75"><a href="#cb4-75" tabindex="-1"></a>    <span class="at">invsqrt_dist_education =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_education,</span>
+<span id="cb4-76"><a href="#cb4-76" tabindex="-1"></a>    <span class="at">invsqrt_dist_finance =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_finance,</span>
+<span id="cb4-77"><a href="#cb4-77" tabindex="-1"></a>    <span class="at">invsqrt_dist_hospital =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_hospital,</span>
+<span id="cb4-78"><a href="#cb4-78" tabindex="-1"></a>    <span class="at">invsqrt_dist_intersection =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_intersection,</span>
+<span id="cb4-79"><a href="#cb4-79" tabindex="-1"></a>    <span class="at">edge_number =</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>VtE[ind.add, <span class="dv">1</span>],</span>
+<span id="cb4-80"><a href="#cb4-80" tabindex="-1"></a>    <span class="at">distance_on_edge =</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>VtE[ind.add, <span class="dv">2</span>]</span>
+<span id="cb4-81"><a href="#cb4-81" tabindex="-1"></a>  ),</span>
+<span id="cb4-82"><a href="#cb4-82" tabindex="-1"></a>  <span class="at">normalized =</span> <span class="cn">TRUE</span></span>
+<span id="cb4-83"><a href="#cb4-83" tabindex="-1"></a>)</span></code></pre></div>
 </div>
 <div id="exploratory-correlation-analysis" class="section level3"
 number="5">
@@ -771,7 +763,14 @@ Model</h3>
 covariates. The code here sets up the necessary spatial model structure
 that will later be incorporated into the INLA stacks.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">system.time</span>(spde_model2 <span class="ot">&lt;-</span> <span class="fu">graph_spde</span>(graph, <span class="at">alpha =</span> alpha, <span class="at">parameterization =</span> <span class="st">&quot;spde&quot;</span>, <span class="at">verbose =</span> <span class="dv">1</span>))</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>data_spde2 <span class="ot">&lt;-</span> <span class="fu">graph_data_spde</span>(<span class="at">graph_spde =</span> spde_model2, <span class="at">name =</span> <span class="st">&quot;field&quot;</span>)</span></code></pre></div>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>data_spde2 <span class="ot">&lt;-</span> <span class="fu">graph_data_spde</span>(<span class="at">graph_spde =</span> spde_model2, <span class="at">name =</span> <span class="st">&quot;field&quot;</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>                              <span class="at">covariates =</span> <span class="fu">c</span>(<span class="st">&quot;Intercept&quot;</span>, <span class="st">&quot;length&quot;</span>, <span class="st">&quot;speed_limit&quot;</span>, </span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>                                             <span class="st">&quot;road_type1&quot;</span>, <span class="st">&quot;road_type2&quot;</span>, <span class="st">&quot;road_type3&quot;</span>, <span class="st">&quot;road_type4&quot;</span>, <span class="st">&quot;road_type5&quot;</span>, <span class="st">&quot;road_type6&quot;</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>                                             <span class="st">&quot;intensity&quot;</span>, <span class="st">&quot;dist_mosque&quot;</span>, <span class="st">&quot;dist_education&quot;</span>, <span class="st">&quot;dist_finance&quot;</span>, <span class="st">&quot;dist_hospital&quot;</span>, <span class="st">&quot;dist_intersection&quot;</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>                                             <span class="st">&quot;double_dist_mosque&quot;</span>, <span class="st">&quot;double_dist_education&quot;</span>, <span class="st">&quot;double_dist_finance&quot;</span>, <span class="st">&quot;double_dist_hospital&quot;</span>, </span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>                                             <span class="st">&quot;double_dist_intersection&quot;</span>, <span class="st">&quot;invsqrt_dist_mosque&quot;</span>, <span class="st">&quot;invsqrt_dist_education&quot;</span>,<span class="st">&quot;invsqrt_dist_finance&quot;</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>                                             <span class="st">&quot;invsqrt_dist_hospital&quot;</span>, <span class="st">&quot;invsqrt_dist_intersection&quot;</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>                              )</span></code></pre></div>
 </div>
 <div id="fitting-multiple-model-formulations" class="section level3"
 number="7">
@@ -786,126 +785,98 @@ specifications, allowing for later comparison of their performance.</p>
 <span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>data_on_mesh <span class="ot">=</span> data_on_mesh_copy</span>
 <span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co"># Form INLA stack object</span></span>
 <span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>stk2 <span class="ot">&lt;-</span> <span class="fu">inla.stack</span>(</span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="at">data =</span> data_spde[[<span class="st">&quot;data&quot;</span>]],</span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="at">A =</span> data_spde[[<span class="st">&quot;basis&quot;</span>]],</span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  <span class="at">effects =</span> <span class="fu">c</span>(</span>
-<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>    data_spde[[<span class="st">&quot;index&quot;</span>]],</span>
-<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>    <span class="fu">list</span>(<span class="at">Intercept =</span> <span class="dv">1</span>,</span>
-<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>         <span class="at">road_type1 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC1,</span>
-<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>         <span class="at">road_type2 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC2,</span>
-<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>         <span class="at">road_type3 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC3,</span>
-<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>         <span class="at">road_type4 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC4,</span>
-<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>         <span class="at">road_type5 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC5,</span>
-<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>         <span class="at">road_type6 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC6,</span>
-<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>         <span class="at">length  =</span> data_on_mesh<span class="sc">$</span>Length,</span>
-<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>         <span class="at">speed_limit =</span>data_on_mesh<span class="sc">$</span>SpeedLimit,</span>
-<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>         <span class="at">intensity =</span> data_on_mesh<span class="sc">$</span>TrafficIntensity,</span>
-<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>         <span class="at">dist_mosque =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_mosque,</span>
-<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>         <span class="at">dist_education =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_education, </span>
-<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>         <span class="at">dist_finance =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_finance, </span>
-<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>         <span class="at">dist_hospital =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_hospital,</span>
-<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>         <span class="at">dist_intersection =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_intersection, </span>
-<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>         <span class="at">dist_double_mosque =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_mosque, </span>
-<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a>         <span class="at">dist_double_education =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_education, </span>
-<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a>         <span class="at">dist_double_finance =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_finance, </span>
-<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a>         <span class="at">dist_double_hospital =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_hospital, </span>
-<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a>         <span class="at">dist_double_intersection =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_intersection, </span>
-<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a>         <span class="at">invsqrt_dist_mosque =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_mosque, </span>
-<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a>         <span class="at">invsqrt_dist_education =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_education, </span>
-<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a>         <span class="at">invsqrt_dist_finance =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_finance, </span>
-<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a>         <span class="at">invsqrt_dist_hospital =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_hospital, </span>
-<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a>         <span class="at">invsqrt_dist_intersection =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_intersection</span>
-<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a>    )</span>
-<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a>  ),</span>
-<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a>  <span class="at">tag =</span> <span class="st">&quot;data&quot;</span></span>
-<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a>)</span>
-<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a></span>
-<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a><span class="co"># Fit a series of models with various covariate combinations</span></span>
-<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a><span class="co"># Model 1 as described in paper </span></span>
-<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a>spde_fit2_1 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a>                   <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-45"><a href="#cb7-45" tabindex="-1"></a>                   <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-46"><a href="#cb7-46" tabindex="-1"></a>                   <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-47"><a href="#cb7-47" tabindex="-1"></a>                   <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e</span>
-<span id="cb7-48"><a href="#cb7-48" tabindex="-1"></a> )</span>
-<span id="cb7-49"><a href="#cb7-49" tabindex="-1"></a><span class="co"># Only intensity</span></span>
-<span id="cb7-50"><a href="#cb7-50" tabindex="-1"></a>spde_fit2_2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-51"><a href="#cb7-51" tabindex="-1"></a>            <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-52"><a href="#cb7-52" tabindex="-1"></a>            <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-53"><a href="#cb7-53" tabindex="-1"></a>            <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-54"><a href="#cb7-54" tabindex="-1"></a>            <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e</span>
-<span id="cb7-55"><a href="#cb7-55" tabindex="-1"></a>)</span>
-<span id="cb7-56"><a href="#cb7-56" tabindex="-1"></a><span class="co"># Speed limit and length</span></span>
-<span id="cb7-57"><a href="#cb7-57" tabindex="-1"></a>spde_fit2_3 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> speed_limit <span class="sc">+</span> length <span class="sc">+</span><span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-58"><a href="#cb7-58" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-59"><a href="#cb7-59" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-60"><a href="#cb7-60" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-61"><a href="#cb7-61" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e</span>
-<span id="cb7-62"><a href="#cb7-62" tabindex="-1"></a>)</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="at">data =</span> data_spde2[[<span class="st">&quot;data&quot;</span>]],</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="at">A =</span> data_spde2[[<span class="st">&quot;basis&quot;</span>]],</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  <span class="at">effects =</span> data_spde2[[<span class="st">&quot;index&quot;</span>]],</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>  <span class="at">tag =</span> <span class="st">&quot;data&quot;</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>)</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co"># Fit a series of models with various covariate combinations</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co"># Model 1 as described in paper </span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>spde_fit2_1 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>                   <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>                   <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>                   <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>                   <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e</span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a> )</span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co"># Only intensity</span></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>spde_fit2_2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>            <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>            <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>            <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>            <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e</span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a>)</span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co"># Speed limit and length</span></span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a>spde_fit2_3 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> speed_limit <span class="sc">+</span> length <span class="sc">+</span><span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e</span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a>)</span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a></span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co"># Intensity and road type m</span></span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#removed road_type2 as it was not significant according to the 95% CI</span></span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a>spde_fit2_4 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span> road_type2<span class="sc">+</span></span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a>                      road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a>                      <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
+<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
+<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
+<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e</span>
+<span id="cb7-45"><a href="#cb7-45" tabindex="-1"></a>)</span>
+<span id="cb7-46"><a href="#cb7-46" tabindex="-1"></a><span class="co"># Full model</span></span>
+<span id="cb7-47"><a href="#cb7-47" tabindex="-1"></a>spde_fit2_5 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span></span>
+<span id="cb7-48"><a href="#cb7-48" tabindex="-1"></a>                      road_type2 <span class="sc">+</span> road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
+<span id="cb7-49"><a href="#cb7-49" tabindex="-1"></a>                      dist_mosque <span class="sc">+</span> dist_education <span class="sc">+</span> dist_finance <span class="sc">+</span></span>
+<span id="cb7-50"><a href="#cb7-50" tabindex="-1"></a>                      dist_hospital <span class="sc">+</span> dist_intersection <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
+<span id="cb7-51"><a href="#cb7-51" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
+<span id="cb7-52"><a href="#cb7-52" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
+<span id="cb7-53"><a href="#cb7-53" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb7-54"><a href="#cb7-54" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e)</span>
+<span id="cb7-55"><a href="#cb7-55" tabindex="-1"></a>spde_fit2_5_2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span></span>
+<span id="cb7-56"><a href="#cb7-56" tabindex="-1"></a>                      road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
+<span id="cb7-57"><a href="#cb7-57" tabindex="-1"></a>                       dist_education <span class="sc">+</span> dist_finance <span class="sc">+</span></span>
+<span id="cb7-58"><a href="#cb7-58" tabindex="-1"></a>                      dist_hospital  <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
+<span id="cb7-59"><a href="#cb7-59" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
+<span id="cb7-60"><a href="#cb7-60" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
+<span id="cb7-61"><a href="#cb7-61" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb7-62"><a href="#cb7-62" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e)</span>
 <span id="cb7-63"><a href="#cb7-63" tabindex="-1"></a></span>
-<span id="cb7-64"><a href="#cb7-64" tabindex="-1"></a><span class="co"># Intensity and road type m</span></span>
-<span id="cb7-65"><a href="#cb7-65" tabindex="-1"></a><span class="co">#removed road_type2 as it was not significant according to the 95% CI</span></span>
-<span id="cb7-66"><a href="#cb7-66" tabindex="-1"></a>spde_fit2_4 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span> road_type2<span class="sc">+</span></span>
-<span id="cb7-67"><a href="#cb7-67" tabindex="-1"></a>                      road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
-<span id="cb7-68"><a href="#cb7-68" tabindex="-1"></a>                      <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
+<span id="cb7-64"><a href="#cb7-64" tabindex="-1"></a><span class="co"># Full model with different distance metrics</span></span>
+<span id="cb7-65"><a href="#cb7-65" tabindex="-1"></a>spde_fit2_6 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span></span>
+<span id="cb7-66"><a href="#cb7-66" tabindex="-1"></a>                      road_type2 <span class="sc">+</span> road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
+<span id="cb7-67"><a href="#cb7-67" tabindex="-1"></a>                      dist_double_mosque <span class="sc">+</span> dist_double_education <span class="sc">+</span> dist_double_finance <span class="sc">+</span></span>
+<span id="cb7-68"><a href="#cb7-68" tabindex="-1"></a>                      dist_double_hospital <span class="sc">+</span> dist_double_intersection <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
 <span id="cb7-69"><a href="#cb7-69" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
 <span id="cb7-70"><a href="#cb7-70" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
 <span id="cb7-71"><a href="#cb7-71" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-72"><a href="#cb7-72" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e</span>
-<span id="cb7-73"><a href="#cb7-73" tabindex="-1"></a>)</span>
-<span id="cb7-74"><a href="#cb7-74" tabindex="-1"></a><span class="co"># Full model</span></span>
-<span id="cb7-75"><a href="#cb7-75" tabindex="-1"></a>spde_fit2_5 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span></span>
-<span id="cb7-76"><a href="#cb7-76" tabindex="-1"></a>                      road_type2 <span class="sc">+</span> road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
-<span id="cb7-77"><a href="#cb7-77" tabindex="-1"></a>                      dist_mosque <span class="sc">+</span> dist_education <span class="sc">+</span> dist_finance <span class="sc">+</span></span>
-<span id="cb7-78"><a href="#cb7-78" tabindex="-1"></a>                      dist_hospital <span class="sc">+</span> dist_intersection <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-79"><a href="#cb7-79" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-80"><a href="#cb7-80" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-81"><a href="#cb7-81" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-82"><a href="#cb7-82" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e)</span>
-<span id="cb7-83"><a href="#cb7-83" tabindex="-1"></a>spde_fit2_5_2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span></span>
-<span id="cb7-84"><a href="#cb7-84" tabindex="-1"></a>                      road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
-<span id="cb7-85"><a href="#cb7-85" tabindex="-1"></a>                       dist_education <span class="sc">+</span> dist_finance <span class="sc">+</span></span>
-<span id="cb7-86"><a href="#cb7-86" tabindex="-1"></a>                      dist_hospital  <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-87"><a href="#cb7-87" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-88"><a href="#cb7-88" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-89"><a href="#cb7-89" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-90"><a href="#cb7-90" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e)</span>
-<span id="cb7-91"><a href="#cb7-91" tabindex="-1"></a></span>
-<span id="cb7-92"><a href="#cb7-92" tabindex="-1"></a><span class="co"># Full model with different distance metrics</span></span>
-<span id="cb7-93"><a href="#cb7-93" tabindex="-1"></a>spde_fit2_6 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span></span>
-<span id="cb7-94"><a href="#cb7-94" tabindex="-1"></a>                      road_type2 <span class="sc">+</span> road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
-<span id="cb7-95"><a href="#cb7-95" tabindex="-1"></a>                      dist_double_mosque <span class="sc">+</span> dist_double_education <span class="sc">+</span> dist_double_finance <span class="sc">+</span></span>
-<span id="cb7-96"><a href="#cb7-96" tabindex="-1"></a>                      dist_double_hospital <span class="sc">+</span> dist_double_intersection <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-97"><a href="#cb7-97" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-98"><a href="#cb7-98" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-99"><a href="#cb7-99" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-100"><a href="#cb7-100" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e)</span>
-<span id="cb7-101"><a href="#cb7-101" tabindex="-1"></a>spde_fit2_6_2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span></span>
-<span id="cb7-102"><a href="#cb7-102" tabindex="-1"></a>                        road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
-<span id="cb7-103"><a href="#cb7-103" tabindex="-1"></a>                        dist_double_education <span class="sc">+</span> dist_double_finance <span class="sc">+</span></span>
-<span id="cb7-104"><a href="#cb7-104" tabindex="-1"></a>                        dist_double_hospital <span class="sc">+</span>  <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-105"><a href="#cb7-105" tabindex="-1"></a>                      <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-106"><a href="#cb7-106" tabindex="-1"></a>                      <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-107"><a href="#cb7-107" tabindex="-1"></a>                      <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-108"><a href="#cb7-108" tabindex="-1"></a>                      <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e)</span>
-<span id="cb7-109"><a href="#cb7-109" tabindex="-1"></a></span>
-<span id="cb7-110"><a href="#cb7-110" tabindex="-1"></a>spde_fit2_7 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span></span>
-<span id="cb7-111"><a href="#cb7-111" tabindex="-1"></a>                      road_type2 <span class="sc">+</span> road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
-<span id="cb7-112"><a href="#cb7-112" tabindex="-1"></a>                      invsqrt_dist_mosque <span class="sc">+</span> invsqrt_dist_education <span class="sc">+</span> invsqrt_dist_finance <span class="sc">+</span></span>
-<span id="cb7-113"><a href="#cb7-113" tabindex="-1"></a>                      invsqrt_dist_hospital <span class="sc">+</span> invsqrt_dist_intersection <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-114"><a href="#cb7-114" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-115"><a href="#cb7-115" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-116"><a href="#cb7-116" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-117"><a href="#cb7-117" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e)</span>
-<span id="cb7-118"><a href="#cb7-118" tabindex="-1"></a></span>
-<span id="cb7-119"><a href="#cb7-119" tabindex="-1"></a>spde_fit2_7_2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span></span>
-<span id="cb7-120"><a href="#cb7-120" tabindex="-1"></a>                      road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
-<span id="cb7-121"><a href="#cb7-121" tabindex="-1"></a>                      invsqrt_dist_education <span class="sc">+</span> invsqrt_dist_finance <span class="sc">+</span></span>
-<span id="cb7-122"><a href="#cb7-122" tabindex="-1"></a>                      <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-123"><a href="#cb7-123" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-124"><a href="#cb7-124" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-125"><a href="#cb7-125" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-126"><a href="#cb7-126" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e)</span></code></pre></div>
+<span id="cb7-72"><a href="#cb7-72" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e)</span>
+<span id="cb7-73"><a href="#cb7-73" tabindex="-1"></a>spde_fit2_6_2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span></span>
+<span id="cb7-74"><a href="#cb7-74" tabindex="-1"></a>                        road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
+<span id="cb7-75"><a href="#cb7-75" tabindex="-1"></a>                        dist_double_education <span class="sc">+</span> dist_double_finance <span class="sc">+</span></span>
+<span id="cb7-76"><a href="#cb7-76" tabindex="-1"></a>                        dist_double_hospital <span class="sc">+</span>  <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
+<span id="cb7-77"><a href="#cb7-77" tabindex="-1"></a>                      <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
+<span id="cb7-78"><a href="#cb7-78" tabindex="-1"></a>                      <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
+<span id="cb7-79"><a href="#cb7-79" tabindex="-1"></a>                      <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb7-80"><a href="#cb7-80" tabindex="-1"></a>                      <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e)</span>
+<span id="cb7-81"><a href="#cb7-81" tabindex="-1"></a></span>
+<span id="cb7-82"><a href="#cb7-82" tabindex="-1"></a>spde_fit2_7 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span></span>
+<span id="cb7-83"><a href="#cb7-83" tabindex="-1"></a>                      road_type2 <span class="sc">+</span> road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
+<span id="cb7-84"><a href="#cb7-84" tabindex="-1"></a>                      invsqrt_dist_mosque <span class="sc">+</span> invsqrt_dist_education <span class="sc">+</span> invsqrt_dist_finance <span class="sc">+</span></span>
+<span id="cb7-85"><a href="#cb7-85" tabindex="-1"></a>                      invsqrt_dist_hospital <span class="sc">+</span> invsqrt_dist_intersection <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
+<span id="cb7-86"><a href="#cb7-86" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
+<span id="cb7-87"><a href="#cb7-87" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
+<span id="cb7-88"><a href="#cb7-88" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb7-89"><a href="#cb7-89" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e)</span>
+<span id="cb7-90"><a href="#cb7-90" tabindex="-1"></a></span>
+<span id="cb7-91"><a href="#cb7-91" tabindex="-1"></a>spde_fit2_7_2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span></span>
+<span id="cb7-92"><a href="#cb7-92" tabindex="-1"></a>                      road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
+<span id="cb7-93"><a href="#cb7-93" tabindex="-1"></a>                      invsqrt_dist_education <span class="sc">+</span> invsqrt_dist_finance <span class="sc">+</span></span>
+<span id="cb7-94"><a href="#cb7-94" tabindex="-1"></a>                      <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
+<span id="cb7-95"><a href="#cb7-95" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
+<span id="cb7-96"><a href="#cb7-96" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
+<span id="cb7-97"><a href="#cb7-97" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb7-98"><a href="#cb7-98" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e)</span></code></pre></div>
 </div>
 <div id="visualizing-credible-intervals" class="section level3"
 number="8">
