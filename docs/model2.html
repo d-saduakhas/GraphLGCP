@@ -13,7 +13,7 @@
 
 <title>Model 2</title>
 
-<script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
@@ -34,8 +34,8 @@
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <script src="site_libs/navigation-1.1/codefolding.js"></script>
-<link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -502,567 +502,533 @@ div.tocify {
 </div>
 
 
+<style type="text/css">
+body .main-container {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+body {
+  max-width: 100% !important;
+}
+
+body, td {
+  font-size: 16px;
+}
+code.r{
+  font-size: 14px;
+}
+pre {
+  font-size: 14px
+}
+.custom-box {
+  background-color: #f5f7fa;
+    border-color: #e1e8ed;
+    color: #2c3e50;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+.caption {
+  margin: auto;
+  text-align: center;
+  margin-bottom: 20px;
+}
+</style>
 <p>In this section, we fit <strong>Model 2</strong> as described in the
-paper, which includes both spatial effects and covariates. The details
-on the covariates used in the analysis are provided in the <a
-href="covariates.html">Extracting Covariates</a> and <a
-href="covariates2.html">Computing Spatial Covariates</a> sections.</p>
-<div id="data-loading-and-graph-preparation" class="section level3"
+paper, which extends Model 1 by incorporating spatial covariates:</p>
+<p><span class="math display">\[\log(\lambda(s)) = \beta_0 +
+\sum_{i=1}^{11} \beta_i X_i(s) + u(s)\]</span></p>
+<p>where <span class="math inline">\(X_i\)</span> are spatial covariates
+and <span class="math inline">\(u(s)\)</span> is the Whittle–Matérn
+field. The covariates include functional road class (FRC, one-hot
+encoded), speed limit, and log-transformed distances to amenities
+(education, finance, hospitals, intersections). Details on covariate
+extraction are in <a href="covariates.html">Extracting Covariates</a>
+and <a href="covariates2.html">Computing Spatial Covariates</a>.</p>
+<p>We fit the model using the <code>lgcp_graph</code> wrapper from the
+MetricGraph package.</p>
+<div id="data-loading-and-graph-preparation" class="section level2"
 number="1">
-<h3><span class="header-section-number">1</span> Data Loading and Graph
-Preparation</h3>
-<p>The next code loads libraries and reads in the datasets, including
-the spatial graph and mesh covariate information. This lays the
-foundation for subsequent covariate preparation and model building.</p>
+<h2><span class="header-section-number">1</span> Data Loading and Graph
+Preparation</h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(MetricGraph)</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(INLA)</span>
 <span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">library</span>(qs)</span>
 <span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
 <span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="co"># Load Graph</span></span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;Data/data_all_reasons_with_distances_7FRC.qs&quot;</span>)</span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>graph <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;Data/graph_mesh_pruned_100m_7FRC_ver2.qs&quot;</span>)</span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>mesh_covariates <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;Data/mesh_locations_pruned_100m_with_distances_7FRC_ver2.qs&quot;</span>)</span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="co"># Note that this graph already has the observation to vertex</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="co"># Load data, graph, and precomputed mesh covariates</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;Data/data_all_reasons_with_distances_7FRC.qs&quot;</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>graph <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;Data/graph_mesh_pruned_50m_7FRC.qs&quot;</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>mesh_covariates <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;Data/mesh_locations_pruned_50m_with_distances_7FRC.qs&quot;</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a></span>
 <span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="fu">summary</span>(graph)</span></code></pre></div>
+<pre><code>## A metric graph object with:
+## 
+## Vertices:
+##   Total: 67223 
+##   Degree 1: 15;  Degree 2: 6287;  Degree 3: 6002;  Degree 4: 18062;  Degree 5: 1624; 
+##   Degree 6: 31762;  Degree 7: 147;  Degree 8: 3316;  Degree 10: 8; 
+##   With incompatible directions:  7 
+## 
+## Edges: 
+##   Total: 164586 
+##   Lengths: 
+##       Min: 0.002991921  ; Max: 13.24092  ; Total: 15438.28 
+##   Weights: 
+##       Columns: FRC SpeedLimit .weights 
+##   That are circles:  0 
+## 
+## Graph units: 
+##   Vertices unit:  degree  ; Lengths unit:  km 
+## 
+## Longitude and Latitude coordinates:  TRUE
+##   Which spatial package:  sp 
+##   CRS:  +proj=longlat +ellps=WGS84 +no_defs
+## 
+## Some characteristics of the graph: Not computed.
+## 
+## Computed quantities inside the graph: 
+##   Laplacian:  FALSE  ; Geodesic distances:  FALSE 
+##   Resistance distances:  FALSE  ; Finite element matrices:  FALSE 
+## 
+## Mesh: 
+##   Max h_e:  0.0499999  ; Min n_e:  0 
+## 
+## Data: The graph has no data!
+## 
+## Tolerances: 
+##   vertex-vertex:  0.001 
+##   vertex-edge:  0.001 
+##   edge-edge:  0</code></pre>
 </div>
-<div id="adding-covariates-to-the-graph" class="section level3"
+<div id="adding-covariates-to-the-graph" class="section level2"
 number="2">
-<h3><span class="header-section-number">2</span> Adding Covariates to
-the Graph</h3>
-<p>We now add to the graph with a “Length” covariate and extract the
-data needed for later steps. Note that, the length covariate is computed
-as the length of the road segment between two vertices.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="do">#####################################</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="do">###### Add covariates to graph ######</span></span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="do">#####################################</span></span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co"># Create a &quot;Length&quot; covariate</span></span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">set_edge_weights</span>(<span class="at">weights =</span> graph<span class="sc">$</span><span class="fu">get_edge_weights</span>() <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">Length =</span> graph<span class="sc">$</span><span class="fu">get_edge_lengths</span>()))</span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>data_on_graph <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">get_data</span>()</span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co"># Extract the data</span></span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>ss <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">get_data</span>()</span>
-<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>dat <span class="ot">&lt;-</span> ss</span>
-<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>ind.dat <span class="ot">&lt;-</span> graph<span class="sc">$</span>PtV <span class="co"># vector with the indices of the vertices which are observation locations.</span></span>
-<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a></span>
-<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="fu">system.time</span>(graph<span class="sc">$</span><span class="fu">compute_fem</span>())</span>
-<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co"># user  system elapsed </span></span>
-<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co"># 717.227   4.772 719.350 </span></span>
-<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a></span>
-<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>n_accidents <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(ss<span class="sc">$</span>AccidentSeverityId)) <span class="co"># 2482 - total number of accidents</span></span></code></pre></div>
-</div>
-<div id="preparing-and-normalizing-covariates" class="section level3"
-number="3">
-<h3><span class="header-section-number">3</span> Preparing and
-Normalizing Covariates</h3>
-<p>Before adding integration points, we prepare covariates by computing
-additional metrics and normalizing them. This section merges graph and
-mesh data, applies a min–max normalization, and prepares the dataset for
-model fitting.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>alpha <span class="ot">&lt;-</span> <span class="dv">1</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>atilde <span class="ot">&lt;-</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>weights</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co"># These are the indices of the mesh nodes which are not observation locations</span></span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>ind.add <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(atilde), ind.dat)</span>
+<h2><span class="header-section-number">2</span> Adding Covariates to
+the Graph</h2>
+<p>We add the accident observations to the graph and extract edge-level
+covariates (FRC, speed limit, road length). The length covariate is
+converted from meters to kilometers for consistency with the
+distance-to-amenity covariates.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Add raw observations to graph</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">add_observations</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">data =</span> data, <span class="at">normalized =</span> <span class="cn">TRUE</span>, <span class="at">tolerance =</span> <span class="fl">0.6</span>, <span class="at">group =</span> <span class="st">&quot;YearNew&quot;</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">clear_obs =</span> <span class="cn">TRUE</span>, <span class="at">duplicated_strategy =</span> <span class="st">&quot;jitter&quot;</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>)</span>
 <span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a></span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="do">### Prepare covariates to match dimensions ####</span></span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>data_on_mesh <span class="ot">=</span> graph<span class="sc">$</span><span class="fu">edgeweight_to_data</span>(<span class="at">mesh =</span> <span class="cn">TRUE</span>, <span class="at">add =</span> <span class="cn">FALSE</span>, <span class="at">return =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>data_on_mesh<span class="sc">$</span>TrafficIntensity <span class="ot">=</span> (data_on_mesh<span class="sc">$</span>SpeedLimit <span class="sc">/</span> data_on_mesh<span class="sc">$</span>FRC) <span class="sc">*</span> <span class="fu">log</span>(data_on_mesh<span class="sc">$</span>Length) <span class="co"># using Chaudhuri et al. (2023) formula</span></span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a></span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co"># Use normalized version of variables to compute the intensity!!!</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co"># Create a &quot;Length&quot; covariate (edge length in km)</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">set_edge_weights</span>(<span class="at">weights =</span> graph<span class="sc">$</span><span class="fu">get_edge_weights</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>                         <span class="fu">mutate</span>(<span class="at">Length =</span> graph<span class="sc">$</span><span class="fu">get_edge_lengths</span>()))</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>data_on_graph <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">get_data</span>()</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>data_on_graph<span class="sc">$</span>Length <span class="ot">&lt;-</span> data_on_graph<span class="sc">$</span>Length <span class="sc">/</span> <span class="dv">1000</span>  <span class="co"># convert to km</span></span>
 <span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a></span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co"># Merge data_on_mesh with mesh_covariates using the common column edge_number and distance_on_edge</span></span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>data_on_mesh <span class="ot">=</span> <span class="fu">merge</span>(data_on_mesh, mesh_covariates, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;.edge_number&quot;</span>, <span class="st">&quot;.distance_on_edge&quot;</span>))</span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>data_on_mesh <span class="ot">=</span> <span class="fu">st_as_sf</span>(data_on_mesh, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">&quot;x&quot;</span>, <span class="st">&quot;y&quot;</span>), <span class="at">crs =</span> <span class="dv">4326</span>)</span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a></span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co"># Dummify the road type - one hot encoding of FRC</span></span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="fu">library</span>(spatstat)</span>
-<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>road_types_graph_data_dummy <span class="ot">=</span> <span class="fu">as.data.frame</span>(<span class="fu">dummify</span>(<span class="fu">as.factor</span>(data_on_graph<span class="sc">$</span>FRC)))</span>
-<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="fu">colnames</span>(road_types_graph_data_dummy) <span class="ot">=</span> <span class="fu">c</span>( <span class="st">&quot;FRC1&quot;</span>, <span class="st">&quot;FRC2&quot;</span>, <span class="st">&quot;FRC3&quot;</span>, <span class="st">&quot;FRC4&quot;</span>, <span class="st">&quot;FRC5&quot;</span>, <span class="st">&quot;FRC6&quot;</span>, <span class="st">&quot;FRC7&quot;</span>)</span>
-<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>road_types_graph_mesh_dummy <span class="ot">=</span> <span class="fu">as.data.frame</span>(<span class="fu">dummify</span>(<span class="fu">as.factor</span>(data_on_mesh<span class="sc">$</span>FRC)))</span>
-<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="fu">colnames</span>(road_types_graph_mesh_dummy) <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;FRC1&quot;</span>, <span class="st">&quot;FRC2&quot;</span>, <span class="st">&quot;FRC3&quot;</span>, <span class="st">&quot;FRC4&quot;</span>, <span class="st">&quot;FRC5&quot;</span>, <span class="st">&quot;FRC6&quot;</span>, <span class="st">&quot;FRC7&quot;</span>)</span>
-<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a></span>
-<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>YearNew <span class="ot">=</span> <span class="fu">unique</span>(data_on_graph<span class="sc">$</span>YearNew)</span>
-<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a>n_accidents <span class="ot">=</span> <span class="fu">table</span>(data_on_graph<span class="sc">$</span>YearNew)</span>
-<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a></span>
-<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a></span>
-<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co"># Perform min_max normalization of all covariates</span></span>
-<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a>min_max_normalize <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
-<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a>  <span class="fu">return</span>( (x <span class="sc">-</span> <span class="fu">min</span>(x))<span class="sc">/</span>(<span class="fu">max</span>(x) <span class="sc">-</span> <span class="fu">min</span>(x)) )</span>
-<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a>}</span>
-<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a></span>
-<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co"># List of columns to normalize, including count-based covariates</span></span>
-<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a>columns_to_normalize <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Length&quot;</span>, <span class="st">&quot;SpeedLimit&quot;</span>, <span class="st">&quot;TrafficIntensity&quot;</span>, <span class="st">&quot;FRC&quot;</span>, </span>
-<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a>                          <span class="st">&quot;distance_to_mosque&quot;</span>, <span class="st">&quot;distance_to_education&quot;</span>, <span class="st">&quot;distance_to_finance&quot;</span>, <span class="st">&quot;distance_to_hospital&quot;</span>,</span>
-<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a>                          <span class="st">&quot;distance_to_intersection&quot;</span>, </span>
-<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a>                          <span class="st">&quot;exp_decay_distance_to_mosque&quot;</span>, <span class="st">&quot;exp_decay_distance_to_education&quot;</span>, <span class="st">&quot;exp_decay_distance_to_finance&quot;</span>,</span>
-<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a>                          <span class="st">&quot;exp_decay_distance_to_hospital&quot;</span>, <span class="st">&quot;exp_decay_distance_to_intersection&quot;</span>,</span>
-<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a>                          <span class="st">&quot;inv_distance_to_mosque&quot;</span>, <span class="st">&quot;inv_distance_to_education&quot;</span>, <span class="st">&quot;inv_distance_to_finance&quot;</span>,</span>
-<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a>                          <span class="st">&quot;inv_distance_to_hospital&quot;</span>, <span class="st">&quot;inv_distance_to_intersection&quot;</span>,</span>
-<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a>                          <span class="st">&quot;log_distance_to_finance&quot;</span>, <span class="st">&quot;log_distance_to_hospital&quot;</span>, <span class="st">&quot;log_distance_to_intersection&quot;</span>,</span>
-<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a>                          <span class="st">&quot;log_distance_to_mosque&quot;</span>, <span class="st">&quot;log_distance_to_education&quot;</span>,</span>
-<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a>                          <span class="st">&quot;inv_sqrt_distance_to_intersection&quot;</span>, <span class="st">&quot;inv_sqrt_distance_to_mosque&quot;</span>, <span class="st">&quot;inv_sqrt_distance_to_education&quot;</span>,</span>
-<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a>                          <span class="st">&quot;inv_sqrt_distance_to_finance&quot;</span>, <span class="st">&quot;inv_sqrt_distance_to_hospital&quot;</span>,</span>
-<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a>                          <span class="st">&quot;exp_decay_double_distance_to_mosque&quot;</span>, <span class="st">&quot;exp_decay_double_distance_to_education&quot;</span>, <span class="st">&quot;exp_decay_double_distance_to_finance&quot;</span>,</span>
-<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a>                          <span class="st">&quot;exp_decay_double_distance_to_hospital&quot;</span>, <span class="st">&quot;exp_decay_double_distance_to_intersection&quot;</span>)</span>
-<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a></span>
-<span id="cb3-48"><a href="#cb3-48" tabindex="-1"></a><span class="co"># Apply normalization for all the data (merge for this purpose only)</span></span>
-<span id="cb3-49"><a href="#cb3-49" tabindex="-1"></a>graph_data <span class="ot">&lt;-</span> data_on_graph[, columns_to_normalize]</span>
-<span id="cb3-50"><a href="#cb3-50" tabindex="-1"></a>mesh_data <span class="ot">&lt;-</span> data_on_mesh[, columns_to_normalize]</span>
-<span id="cb3-51"><a href="#cb3-51" tabindex="-1"></a></span>
-<span id="cb3-52"><a href="#cb3-52" tabindex="-1"></a><span class="co"># Drop geometry column</span></span>
-<span id="cb3-53"><a href="#cb3-53" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb3-54"><a href="#cb3-54" tabindex="-1"></a>combined_data <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(graph_data, mesh_data) <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="sc">-</span>geometry)</span>
-<span id="cb3-55"><a href="#cb3-55" tabindex="-1"></a></span>
-<span id="cb3-56"><a href="#cb3-56" tabindex="-1"></a><span class="co"># Apply normalization</span></span>
-<span id="cb3-57"><a href="#cb3-57" tabindex="-1"></a>normalized_combined_data <span class="ot">&lt;-</span> combined_data <span class="sc">%&gt;%</span></span>
-<span id="cb3-58"><a href="#cb3-58" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">everything</span>(), min_max_normalize))</span>
-<span id="cb3-59"><a href="#cb3-59" tabindex="-1"></a></span>
-<span id="cb3-60"><a href="#cb3-60" tabindex="-1"></a><span class="co"># Split data back</span></span>
-<span id="cb3-61"><a href="#cb3-61" tabindex="-1"></a>normalized_graph_data <span class="ot">&lt;-</span> normalized_combined_data[<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(graph_data), ]</span>
-<span id="cb3-62"><a href="#cb3-62" tabindex="-1"></a>normalized_mesh_data <span class="ot">&lt;-</span> normalized_combined_data[(<span class="fu">nrow</span>(graph_data) <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">:</span><span class="fu">nrow</span>(combined_data), ]</span>
-<span id="cb3-63"><a href="#cb3-63" tabindex="-1"></a></span>
-<span id="cb3-64"><a href="#cb3-64" tabindex="-1"></a><span class="co"># Assign normalized values back to original dataframes</span></span>
-<span id="cb3-65"><a href="#cb3-65" tabindex="-1"></a>data_on_graph[, columns_to_normalize] <span class="ot">&lt;-</span> normalized_graph_data</span>
-<span id="cb3-66"><a href="#cb3-66" tabindex="-1"></a>data_on_mesh[, columns_to_normalize] <span class="ot">&lt;-</span> normalized_mesh_data</span></code></pre></div>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>ss <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">get_data</span>()</span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">compute_mesh_weights</span>()</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>n_accidents <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(ss<span class="sc">$</span>AccidentSeverityId))  <span class="co"># 2482</span></span></code></pre></div>
 </div>
-<div id="adding-observations-to-the-graph" class="section level3"
-number="4">
-<h3><span class="header-section-number">4</span> Adding Observations to
-the Graph</h3>
-<p>This section adds the observed locations and integration points into
-the graph. The observed points are enriched with the covariates from the
-graph data while the integration points use the corresponding mesh
-data.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>atilde <span class="ot">&lt;-</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>weights</span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">clear_observations</span>()</span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co"># Add the locations which are observed</span></span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">add_observations</span>(</span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  <span class="at">data =</span> <span class="fu">data.frame</span>(</span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>    <span class="at">y =</span> <span class="fu">rep</span>(<span class="dv">1</span>, <span class="fu">length</span>(ind.dat)),</span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>    <span class="at">e =</span> atilde[ind.dat],</span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>    <span class="at">Intercept =</span> <span class="dv">1</span>,</span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>    <span class="at">length =</span> data_on_graph<span class="sc">$</span>Length,</span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>    <span class="at">speed_limit =</span> data_on_graph<span class="sc">$</span>SpeedLimit,</span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>    <span class="at">road_type1 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC1,</span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>    <span class="at">road_type2 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC2,</span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>    <span class="at">road_type3 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC3,</span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>    <span class="at">road_type4 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC4,</span>
-<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a>    <span class="at">road_type5 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC5,</span>
-<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>    <span class="at">road_type6 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC6,</span>
-<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a>    <span class="at">road_type7 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC7,</span>
-<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a>    <span class="at">intensity =</span> data_on_graph<span class="sc">$</span>TrafficIntensity,</span>
-<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a>    <span class="at">dist_mosque =</span> data_on_graph<span class="sc">$</span>exp_decay_distance_to_mosque,</span>
-<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a>    <span class="at">dist_education =</span> data_on_graph<span class="sc">$</span>exp_decay_distance_to_education,</span>
-<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a>    <span class="at">dist_finance =</span> data_on_graph<span class="sc">$</span>exp_decay_distance_to_finance,</span>
-<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a>    <span class="at">dist_hospital =</span> data_on_graph<span class="sc">$</span>exp_decay_distance_to_hospital,</span>
-<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a>    <span class="at">dist_intersection =</span> data_on_graph<span class="sc">$</span>exp_decay_distance_to_intersection,</span>
-<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a>    <span class="at">double_dist_mosque =</span> data_on_graph<span class="sc">$</span>exp_decay_double_distance_to_mosque,</span>
-<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a>    <span class="at">double_dist_education =</span> data_on_graph<span class="sc">$</span>exp_decay_double_distance_to_education,</span>
-<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a>    <span class="at">double_dist_finance =</span> data_on_graph<span class="sc">$</span>exp_decay_double_distance_to_finance,</span>
-<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a>    <span class="at">double_dist_hospital =</span> data_on_graph<span class="sc">$</span>exp_decay_double_distance_to_hospital,</span>
-<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a>    <span class="at">double_dist_intersection =</span> data_on_graph<span class="sc">$</span>exp_decay_double_distance_to_intersection,</span>
-<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a>    <span class="at">invsqrt_dist_mosque =</span> data_on_graph<span class="sc">$</span>inv_sqrt_distance_to_mosque,</span>
-<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a>    <span class="at">invsqrt_dist_education =</span> data_on_graph<span class="sc">$</span>inv_sqrt_distance_to_education,</span>
-<span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a>    <span class="at">invsqrt_dist_finance =</span> data_on_graph<span class="sc">$</span>inv_sqrt_distance_to_finance,</span>
-<span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a>    <span class="at">invsqrt_dist_hospital =</span> data_on_graph<span class="sc">$</span>inv_sqrt_distance_to_hospital,</span>
-<span id="cb4-34"><a href="#cb4-34" tabindex="-1"></a>    <span class="at">invsqrt_dist_intersection =</span> data_on_graph<span class="sc">$</span>inv_sqrt_distance_to_intersection,</span>
-<span id="cb4-35"><a href="#cb4-35" tabindex="-1"></a>    <span class="at">edge_number =</span> data_on_graph<span class="sc">$</span>.edge_number,</span>
-<span id="cb4-36"><a href="#cb4-36" tabindex="-1"></a>    <span class="at">distance_on_edge =</span> data_on_graph<span class="sc">$</span>.distance_on_edge</span>
-<span id="cb4-37"><a href="#cb4-37" tabindex="-1"></a>  ),</span>
-<span id="cb4-38"><a href="#cb4-38" tabindex="-1"></a>  <span class="at">normalized =</span> <span class="cn">TRUE</span></span>
-<span id="cb4-39"><a href="#cb4-39" tabindex="-1"></a>)</span>
-<span id="cb4-40"><a href="#cb4-40" tabindex="-1"></a></span>
-<span id="cb4-41"><a href="#cb4-41" tabindex="-1"></a><span class="co"># Subset the data_on_mesh to include correct indices</span></span>
-<span id="cb4-42"><a href="#cb4-42" tabindex="-1"></a>data_on_mesh_copy <span class="ot">=</span> data_on_mesh</span>
-<span id="cb4-43"><a href="#cb4-43" tabindex="-1"></a>data_on_mesh <span class="ot">=</span> data_on_mesh[ind.add,]</span>
-<span id="cb4-44"><a href="#cb4-44" tabindex="-1"></a>road_types_graph_mesh_dummy_copy <span class="ot">=</span> road_types_graph_mesh_dummy</span>
-<span id="cb4-45"><a href="#cb4-45" tabindex="-1"></a>road_types_graph_mesh_dummy <span class="ot">=</span> road_types_graph_mesh_dummy[ind.add,]</span>
-<span id="cb4-46"><a href="#cb4-46" tabindex="-1"></a></span>
-<span id="cb4-47"><a href="#cb4-47" tabindex="-1"></a></span>
-<span id="cb4-48"><a href="#cb4-48" tabindex="-1"></a><span class="co"># Add the remaining integration points</span></span>
-<span id="cb4-49"><a href="#cb4-49" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">add_observations</span>(</span>
-<span id="cb4-50"><a href="#cb4-50" tabindex="-1"></a>  <span class="at">data =</span> <span class="fu">data.frame</span>(</span>
-<span id="cb4-51"><a href="#cb4-51" tabindex="-1"></a>    <span class="at">y =</span> <span class="fu">rep</span>(<span class="dv">0</span>, <span class="fu">length</span>(ind.add)),</span>
-<span id="cb4-52"><a href="#cb4-52" tabindex="-1"></a>    <span class="at">e =</span> atilde[ind.add],</span>
-<span id="cb4-53"><a href="#cb4-53" tabindex="-1"></a>    <span class="at">Intercept =</span> <span class="dv">1</span>,</span>
-<span id="cb4-54"><a href="#cb4-54" tabindex="-1"></a>    <span class="at">length =</span> data_on_mesh<span class="sc">$</span>Length,</span>
-<span id="cb4-55"><a href="#cb4-55" tabindex="-1"></a>    <span class="at">speed_limit =</span> data_on_mesh<span class="sc">$</span>SpeedLimit,</span>
-<span id="cb4-56"><a href="#cb4-56" tabindex="-1"></a>    <span class="at">road_type1 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC1,</span>
-<span id="cb4-57"><a href="#cb4-57" tabindex="-1"></a>    <span class="at">road_type2 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC2,</span>
-<span id="cb4-58"><a href="#cb4-58" tabindex="-1"></a>    <span class="at">road_type3 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC3,</span>
-<span id="cb4-59"><a href="#cb4-59" tabindex="-1"></a>    <span class="at">road_type4 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC4,</span>
-<span id="cb4-60"><a href="#cb4-60" tabindex="-1"></a>    <span class="at">road_type5 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC5,</span>
-<span id="cb4-61"><a href="#cb4-61" tabindex="-1"></a>    <span class="at">road_type6 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC6,</span>
-<span id="cb4-62"><a href="#cb4-62" tabindex="-1"></a>    <span class="at">road_type7 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC7,                                      </span>
-<span id="cb4-63"><a href="#cb4-63" tabindex="-1"></a>    <span class="at">intensity =</span> data_on_mesh<span class="sc">$</span>TrafficIntensity,</span>
-<span id="cb4-64"><a href="#cb4-64" tabindex="-1"></a>    <span class="at">dist_mosque =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_mosque,</span>
-<span id="cb4-65"><a href="#cb4-65" tabindex="-1"></a>    <span class="at">dist_education =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_education,</span>
-<span id="cb4-66"><a href="#cb4-66" tabindex="-1"></a>    <span class="at">dist_finance =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_finance,</span>
-<span id="cb4-67"><a href="#cb4-67" tabindex="-1"></a>    <span class="at">dist_hospital =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_hospital,</span>
-<span id="cb4-68"><a href="#cb4-68" tabindex="-1"></a>    <span class="at">dist_intersection =</span> data_on_mesh<span class="sc">$</span>exp_decay_distance_to_intersection,</span>
-<span id="cb4-69"><a href="#cb4-69" tabindex="-1"></a>    <span class="at">double_dist_mosque =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_mosque,</span>
-<span id="cb4-70"><a href="#cb4-70" tabindex="-1"></a>    <span class="at">double_dist_education =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_education,</span>
-<span id="cb4-71"><a href="#cb4-71" tabindex="-1"></a>    <span class="at">double_dist_finance =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_finance,</span>
-<span id="cb4-72"><a href="#cb4-72" tabindex="-1"></a>    <span class="at">double_dist_hospital =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_hospital,</span>
-<span id="cb4-73"><a href="#cb4-73" tabindex="-1"></a>    <span class="at">double_dist_intersection =</span> data_on_mesh<span class="sc">$</span>exp_decay_double_distance_to_intersection,</span>
-<span id="cb4-74"><a href="#cb4-74" tabindex="-1"></a>    <span class="at">invsqrt_dist_mosque =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_mosque,</span>
-<span id="cb4-75"><a href="#cb4-75" tabindex="-1"></a>    <span class="at">invsqrt_dist_education =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_education,</span>
-<span id="cb4-76"><a href="#cb4-76" tabindex="-1"></a>    <span class="at">invsqrt_dist_finance =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_finance,</span>
-<span id="cb4-77"><a href="#cb4-77" tabindex="-1"></a>    <span class="at">invsqrt_dist_hospital =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_hospital,</span>
-<span id="cb4-78"><a href="#cb4-78" tabindex="-1"></a>    <span class="at">invsqrt_dist_intersection =</span> data_on_mesh<span class="sc">$</span>inv_sqrt_distance_to_intersection,</span>
-<span id="cb4-79"><a href="#cb4-79" tabindex="-1"></a>    <span class="at">edge_number =</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>VtE[ind.add, <span class="dv">1</span>],</span>
-<span id="cb4-80"><a href="#cb4-80" tabindex="-1"></a>    <span class="at">distance_on_edge =</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>VtE[ind.add, <span class="dv">2</span>]</span>
-<span id="cb4-81"><a href="#cb4-81" tabindex="-1"></a>  ),</span>
-<span id="cb4-82"><a href="#cb4-82" tabindex="-1"></a>  <span class="at">normalized =</span> <span class="cn">TRUE</span></span>
-<span id="cb4-83"><a href="#cb4-83" tabindex="-1"></a>)</span></code></pre></div>
+<div id="preparing-covariates-at-mesh-locations" class="section level2"
+number="3">
+<h2><span class="header-section-number">3</span> Preparing Covariates at
+Mesh Locations</h2>
+<p>For the <code>lgcp_graph</code> wrapper, covariates must be available
+at both observation and mesh locations. We extract edge weights at mesh
+nodes using <code>edgeweight_to_data()</code> and merge with the
+precomputed amenity distances.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>alpha <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>atilde <span class="ot">&lt;-</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>weights</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co"># Get covariates at mesh locations from edge weights</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>data_on_mesh <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">edgeweight_to_data</span>(<span class="at">mesh =</span> <span class="cn">TRUE</span>, <span class="at">add =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>                                          <span class="at">return =</span> <span class="cn">TRUE</span>, <span class="at">normalized =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(.group <span class="sc">==</span> <span class="dv">2015</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co"># Merge with precomputed amenity distances</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>data_on_mesh <span class="ot">&lt;-</span> <span class="fu">merge</span>(data_on_mesh, mesh_covariates,</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>                       <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;.edge_number&quot;</span>, <span class="st">&quot;.distance_on_edge&quot;</span>))</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>data_on_mesh <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(data_on_mesh, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">&quot;x&quot;</span>, <span class="st">&quot;y&quot;</span>), <span class="at">crs =</span> <span class="dv">4326</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>YearNew <span class="ot">&lt;-</span> <span class="fu">unique</span>(data_on_graph<span class="sc">$</span>YearNew)</span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>n_accidents <span class="ot">&lt;-</span> <span class="fu">table</span>(data_on_graph<span class="sc">$</span>YearNew)</span></code></pre></div>
 </div>
-<div id="exploratory-correlation-analysis" class="section level3"
-number="5">
-<h3><span class="header-section-number">5</span> Exploratory Correlation
-Analysis</h3>
-<p>Before modeling, we check the correlation among covariates. The
-following code produces several correlation plots to help decide which
-variables to include.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>df <span class="ot">=</span> graph<span class="sc">$</span><span class="fu">get_data</span>()</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co"># CHECK CORRELATION before fitting the model</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="fu">png</span>(<span class="st">&quot;Figures/4Corrplot_model3_all.png&quot;</span>, <span class="at">height =</span> <span class="dv">10</span>, <span class="at">width =</span> <span class="dv">10</span>, <span class="at">units =</span> <span class="st">&quot;in&quot;</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>corrplot<span class="sc">::</span><span class="fu">corrplot</span>(<span class="fu">cor</span>(data_rep[,<span class="fu">c</span>(<span class="dv">3</span><span class="sc">:</span><span class="dv">32</span>)]), <span class="at">method =</span> <span class="st">&quot;color&quot;</span>, <span class="at">type =</span> <span class="st">&quot;upper&quot;</span>)</span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="fu">dev.off</span>()</span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co"># exp_double_dist</span></span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>corrplot<span class="sc">::</span><span class="fu">corrplot</span>(<span class="fu">cor</span>(data_rep[,<span class="fu">c</span>(<span class="dv">3</span><span class="sc">:</span><span class="dv">10</span>, <span class="dv">12</span>,<span class="dv">18</span><span class="sc">:</span><span class="dv">22</span>)]), <span class="at">method =</span> <span class="st">&quot;color&quot;</span>,<span class="at">addCoef.col =</span> <span class="st">&quot;black&quot;</span>, <span class="at">type =</span> <span class="st">&quot;upper&quot;</span>)</span>
+<div id="normalizing-covariates" class="section level2" number="4">
+<h2><span class="header-section-number">4</span> Normalizing
+Covariates</h2>
+<p>All covariates are normalized using min–max scaling applied jointly
+across observation and mesh locations to ensure consistency. This is
+important because the covariates must be on comparable scales for the
+model to fit well.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>min_max_normalize <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="fu">return</span>((x <span class="sc">-</span> <span class="fu">min</span>(x)) <span class="sc">/</span> (<span class="fu">max</span>(x) <span class="sc">-</span> <span class="fu">min</span>(x)))</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>}</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co"># Columns to normalize</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>columns_to_normalize <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Length&quot;</span>, <span class="st">&quot;SpeedLimit&quot;</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>                          <span class="st">&quot;log_distance_to_finance&quot;</span>, <span class="st">&quot;log_distance_to_hospital&quot;</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>                          <span class="st">&quot;log_distance_to_intersection&quot;</span>, <span class="st">&quot;log_distance_to_education&quot;</span>)</span>
 <span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a></span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="fu">png</span>(<span class="st">&quot;Figures/4Corrplot_model3_exp_double_dist.png&quot;</span>, <span class="at">height =</span> <span class="dv">10</span>, <span class="at">width =</span> <span class="dv">10</span>, <span class="at">units =</span> <span class="st">&quot;in&quot;</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>corrplot<span class="sc">::</span><span class="fu">corrplot</span>(<span class="fu">cor</span>(data_rep[,<span class="fu">c</span>(<span class="dv">3</span>,<span class="dv">5</span><span class="sc">:</span><span class="dv">10</span>, <span class="dv">12</span>,<span class="dv">18</span><span class="sc">:</span><span class="dv">22</span>)]), <span class="at">method =</span> <span class="st">&quot;color&quot;</span>,<span class="at">addCoef.col =</span> <span class="st">&quot;black&quot;</span>, <span class="at">type =</span> <span class="st">&quot;upper&quot;</span>)</span>
-<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="fu">dev.off</span>()</span>
-<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a></span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co"># exp_dist</span></span>
-<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co"># excluded finance due to high correlation with other variables &gt;=0.5</span></span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="fu">png</span>(<span class="st">&quot;Figures/4Corrplot_model3_exp_dist.png&quot;</span>, <span class="at">height =</span> <span class="dv">10</span>, <span class="at">width =</span> <span class="dv">10</span>, <span class="at">units =</span> <span class="st">&quot;in&quot;</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
-<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>corrplot<span class="sc">::</span><span class="fu">corrplot</span>(<span class="fu">cor</span>(data_rep[,<span class="fu">c</span>(<span class="dv">3</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">12</span><span class="sc">:</span><span class="dv">17</span>)]), <span class="at">method =</span> <span class="st">&quot;color&quot;</span>,<span class="at">addCoef.col =</span> <span class="st">&quot;black&quot;</span>, <span class="at">type =</span> <span class="st">&quot;upper&quot;</span>)</span>
-<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="fu">dev.off</span>()</span>
-<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a></span>
-<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co"># log_dist - highly correlated with all other distance variables. FUllY excluded</span></span>
-<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="fu">png</span>(<span class="st">&quot;Figures/4Corrplot_model3_log_dist.png&quot;</span>, <span class="at">height =</span> <span class="dv">10</span>, <span class="at">width =</span> <span class="dv">10</span>, <span class="at">units =</span> <span class="st">&quot;in&quot;</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
-<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a>corrplot<span class="sc">::</span><span class="fu">corrplot</span>(<span class="fu">cor</span>(data_rep[,<span class="fu">c</span>(<span class="dv">3</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">12</span>,<span class="dv">23</span><span class="sc">:</span><span class="dv">27</span>)]), <span class="at">method =</span> <span class="st">&quot;color&quot;</span>,<span class="at">addCoef.col =</span> <span class="st">&quot;black&quot;</span>, <span class="at">type =</span> <span class="st">&quot;upper&quot;</span>)</span>
-<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="fu">dev.off</span>()</span>
-<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a></span>
-<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a><span class="co"># inv_sqrt_dist</span></span>
-<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a><span class="fu">png</span>(<span class="st">&quot;Figures/4Corrplot_model3_inv_sqrt_dist.png&quot;</span>, <span class="at">height =</span> <span class="dv">10</span>, <span class="at">width =</span> <span class="dv">10</span>, <span class="at">units =</span> <span class="st">&quot;in&quot;</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
-<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a>corrplot<span class="sc">::</span><span class="fu">corrplot</span>(<span class="fu">cor</span>(data_rep[,<span class="fu">c</span>(<span class="dv">3</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">12</span>,<span class="dv">28</span><span class="sc">:</span><span class="dv">32</span>)]), <span class="at">method =</span> <span class="st">&quot;color&quot;</span>,<span class="at">addCoef.col =</span> <span class="st">&quot;black&quot;</span>, <span class="at">type =</span> <span class="st">&quot;upper&quot;</span>)</span>
-<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a><span class="fu">dev.off</span>()</span></code></pre></div>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co"># Combine graph and mesh data, normalize jointly, then split back</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>graph_data <span class="ot">&lt;-</span> data_on_graph[, columns_to_normalize]</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>mesh_data  <span class="ot">&lt;-</span> data_on_mesh[, columns_to_normalize]</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>combined   <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">bind_rows</span>(graph_data, mesh_data) <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>geometry)</span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="cf">for</span> (col <span class="cf">in</span> columns_to_normalize) {</span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>  combined[[col]] <span class="ot">&lt;-</span> <span class="fu">min_max_normalize</span>(combined[[col]])</span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>}</span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a>normalized_graph_data <span class="ot">&lt;-</span> combined[<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(graph_data), ]</span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a>normalized_mesh_data  <span class="ot">&lt;-</span> combined[(<span class="fu">nrow</span>(graph_data) <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">:</span><span class="fu">nrow</span>(combined), ]</span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a>data_on_graph[, columns_to_normalize] <span class="ot">&lt;-</span> normalized_graph_data</span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a>data_on_mesh[, columns_to_normalize] <span class="ot">&lt;-</span> normalized_mesh_data</span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a></span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a><span class="co"># Reorder mesh data to match graph$mesh$VtE ordering</span></span>
+<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a>data_on_mesh <span class="ot">&lt;-</span> <span class="fu">match_mesh_data</span>(graph, data_on_mesh)</span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a><span class="co"># Verify ordering:</span></span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a><span class="fu">sum</span>((graph<span class="sc">$</span>mesh<span class="sc">$</span>VtE <span class="sc">-</span> <span class="fu">as.matrix</span>(sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>(data_on_mesh[, <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>])))<span class="sc">^</span><span class="dv">2</span>)</span></code></pre></div>
+<pre><code>## [1] 0</code></pre>
 </div>
-<div id="building-the-spde-model" class="section level3" number="6">
-<h3><span class="header-section-number">6</span> Building the SPDE
-Model</h3>
-<p>Next, we create the SPDE model using the graph object with
-covariates. The code here sets up the necessary spatial model structure
-that will later be incorporated into the INLA stacks.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">system.time</span>(spde_model2 <span class="ot">&lt;-</span> <span class="fu">graph_spde</span>(graph, <span class="at">alpha =</span> alpha, <span class="at">parameterization =</span> <span class="st">&quot;spde&quot;</span>, <span class="at">verbose =</span> <span class="dv">1</span>))</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>data_spde2 <span class="ot">&lt;-</span> <span class="fu">graph_data_spde</span>(<span class="at">graph_spde =</span> spde_model2, <span class="at">name =</span> <span class="st">&quot;field&quot;</span>,</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>                              <span class="at">covariates =</span> <span class="fu">c</span>(<span class="st">&quot;Intercept&quot;</span>, <span class="st">&quot;length&quot;</span>, <span class="st">&quot;speed_limit&quot;</span>, </span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>                                             <span class="st">&quot;road_type1&quot;</span>, <span class="st">&quot;road_type2&quot;</span>, <span class="st">&quot;road_type3&quot;</span>, <span class="st">&quot;road_type4&quot;</span>, <span class="st">&quot;road_type5&quot;</span>, <span class="st">&quot;road_type6&quot;</span>,</span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>                                             <span class="st">&quot;intensity&quot;</span>, <span class="st">&quot;dist_mosque&quot;</span>, <span class="st">&quot;dist_education&quot;</span>, <span class="st">&quot;dist_finance&quot;</span>, <span class="st">&quot;dist_hospital&quot;</span>, <span class="st">&quot;dist_intersection&quot;</span>,</span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>                                             <span class="st">&quot;double_dist_mosque&quot;</span>, <span class="st">&quot;double_dist_education&quot;</span>, <span class="st">&quot;double_dist_finance&quot;</span>, <span class="st">&quot;double_dist_hospital&quot;</span>, </span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>                                             <span class="st">&quot;double_dist_intersection&quot;</span>, <span class="st">&quot;invsqrt_dist_mosque&quot;</span>, <span class="st">&quot;invsqrt_dist_education&quot;</span>,<span class="st">&quot;invsqrt_dist_finance&quot;</span>,</span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>                                             <span class="st">&quot;invsqrt_dist_hospital&quot;</span>, <span class="st">&quot;invsqrt_dist_intersection&quot;</span>)</span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>                              )</span></code></pre></div>
+<div id="one-hot-encoding-of-frc" class="section level2" number="5">
+<h2><span class="header-section-number">5</span> One-Hot Encoding of
+FRC</h2>
+<p>Functional road class (FRC) is encoded as dummy variables. FRC7 is
+used as the reference category (dropped from the model).</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>road_types_graph_data_dummy <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">model.matrix</span>(<span class="sc">~</span> <span class="fu">factor</span>(FRC) <span class="sc">-</span> <span class="dv">1</span>, <span class="at">data =</span> data_on_graph))</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">colnames</span>(road_types_graph_data_dummy) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;FRC1&quot;</span>, <span class="st">&quot;FRC2&quot;</span>, <span class="st">&quot;FRC3&quot;</span>, <span class="st">&quot;FRC4&quot;</span>, <span class="st">&quot;FRC5&quot;</span>, <span class="st">&quot;FRC6&quot;</span>, <span class="st">&quot;FRC7&quot;</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>road_types_graph_mesh_dummy <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">model.matrix</span>(<span class="sc">~</span> <span class="fu">factor</span>(FRC) <span class="sc">-</span> <span class="dv">1</span>, <span class="at">data =</span> data_on_mesh))</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="fu">colnames</span>(road_types_graph_mesh_dummy) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;FRC1&quot;</span>, <span class="st">&quot;FRC2&quot;</span>, <span class="st">&quot;FRC3&quot;</span>, <span class="st">&quot;FRC4&quot;</span>, <span class="st">&quot;FRC5&quot;</span>, <span class="st">&quot;FRC6&quot;</span>, <span class="st">&quot;FRC7&quot;</span>)</span></code></pre></div>
 </div>
-<div id="fitting-multiple-model-formulations" class="section level3"
+<div id="correlation-analysis" class="section level2" number="6">
+<h2><span class="header-section-number">6</span> Correlation
+Analysis</h2>
+<p>Before fitting, we check correlations among covariates to detect
+multicollinearity. We excluded mosques due to high correlation with
+other distance covariates.</p>
+<p><img src="Figures/New_5Graph_model2_alpha1_7FRC_pruned_exact_50m_correlation_plot.png" width="1350" style="display: block; margin: auto;" /></p>
+</div>
+<div id="adding-observations-and-mesh-covariates" class="section level2"
 number="7">
-<h3><span class="header-section-number">7</span> Fitting Multiple Model
-Formulations</h3>
-<p>We now form the INLA stack and fit several models with different
-covariate formulations. This part demonstrates alternative model
-specifications, allowing for later comparison of their performance.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="do">##########################</span></span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="do">###### Fit model #########</span></span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="do">##########################</span></span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>data_on_mesh <span class="ot">=</span> data_on_mesh_copy</span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co"># Form INLA stack object</span></span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>stk2 <span class="ot">&lt;-</span> <span class="fu">inla.stack</span>(</span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="at">data =</span> data_spde2[[<span class="st">&quot;data&quot;</span>]],</span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="at">A =</span> data_spde2[[<span class="st">&quot;basis&quot;</span>]],</span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  <span class="at">effects =</span> data_spde2[[<span class="st">&quot;index&quot;</span>]],</span>
-<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>  <span class="at">tag =</span> <span class="st">&quot;data&quot;</span></span>
-<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>)</span>
-<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a></span>
-<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co"># Fit a series of models with various covariate combinations</span></span>
-<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co"># Model 1 as described in paper </span></span>
-<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>spde_fit2_1 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>                   <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>                   <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>                   <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>                   <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e</span>
-<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a> )</span>
-<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co"># Only intensity</span></span>
-<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>spde_fit2_2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>            <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>            <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>            <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>            <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e</span>
-<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a>)</span>
-<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co"># Speed limit and length</span></span>
-<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a>spde_fit2_3 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> speed_limit <span class="sc">+</span> length <span class="sc">+</span><span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e</span>
-<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a>)</span>
-<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a></span>
-<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co"># Intensity and road type m</span></span>
-<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#removed road_type2 as it was not significant according to the 95% CI</span></span>
-<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a>spde_fit2_4 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span> road_type2<span class="sc">+</span></span>
-<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a>                      road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
-<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a>                      <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e</span>
-<span id="cb7-45"><a href="#cb7-45" tabindex="-1"></a>)</span>
-<span id="cb7-46"><a href="#cb7-46" tabindex="-1"></a><span class="co"># Full model</span></span>
-<span id="cb7-47"><a href="#cb7-47" tabindex="-1"></a>spde_fit2_5 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span></span>
-<span id="cb7-48"><a href="#cb7-48" tabindex="-1"></a>                      road_type2 <span class="sc">+</span> road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
-<span id="cb7-49"><a href="#cb7-49" tabindex="-1"></a>                      dist_mosque <span class="sc">+</span> dist_education <span class="sc">+</span> dist_finance <span class="sc">+</span></span>
-<span id="cb7-50"><a href="#cb7-50" tabindex="-1"></a>                      dist_hospital <span class="sc">+</span> dist_intersection <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-51"><a href="#cb7-51" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-52"><a href="#cb7-52" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-53"><a href="#cb7-53" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-54"><a href="#cb7-54" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e)</span>
-<span id="cb7-55"><a href="#cb7-55" tabindex="-1"></a>spde_fit2_5_2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span></span>
-<span id="cb7-56"><a href="#cb7-56" tabindex="-1"></a>                      road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
-<span id="cb7-57"><a href="#cb7-57" tabindex="-1"></a>                       dist_education <span class="sc">+</span> dist_finance <span class="sc">+</span></span>
-<span id="cb7-58"><a href="#cb7-58" tabindex="-1"></a>                      dist_hospital  <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-59"><a href="#cb7-59" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-60"><a href="#cb7-60" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-61"><a href="#cb7-61" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-62"><a href="#cb7-62" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e)</span>
-<span id="cb7-63"><a href="#cb7-63" tabindex="-1"></a></span>
-<span id="cb7-64"><a href="#cb7-64" tabindex="-1"></a><span class="co"># Full model with different distance metrics</span></span>
-<span id="cb7-65"><a href="#cb7-65" tabindex="-1"></a>spde_fit2_6 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span></span>
-<span id="cb7-66"><a href="#cb7-66" tabindex="-1"></a>                      road_type2 <span class="sc">+</span> road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
-<span id="cb7-67"><a href="#cb7-67" tabindex="-1"></a>                      dist_double_mosque <span class="sc">+</span> dist_double_education <span class="sc">+</span> dist_double_finance <span class="sc">+</span></span>
-<span id="cb7-68"><a href="#cb7-68" tabindex="-1"></a>                      dist_double_hospital <span class="sc">+</span> dist_double_intersection <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-69"><a href="#cb7-69" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-70"><a href="#cb7-70" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-71"><a href="#cb7-71" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-72"><a href="#cb7-72" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e)</span>
-<span id="cb7-73"><a href="#cb7-73" tabindex="-1"></a>spde_fit2_6_2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span></span>
-<span id="cb7-74"><a href="#cb7-74" tabindex="-1"></a>                        road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
-<span id="cb7-75"><a href="#cb7-75" tabindex="-1"></a>                        dist_double_education <span class="sc">+</span> dist_double_finance <span class="sc">+</span></span>
-<span id="cb7-76"><a href="#cb7-76" tabindex="-1"></a>                        dist_double_hospital <span class="sc">+</span>  <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-77"><a href="#cb7-77" tabindex="-1"></a>                      <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-78"><a href="#cb7-78" tabindex="-1"></a>                      <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-79"><a href="#cb7-79" tabindex="-1"></a>                      <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-80"><a href="#cb7-80" tabindex="-1"></a>                      <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e)</span>
-<span id="cb7-81"><a href="#cb7-81" tabindex="-1"></a></span>
-<span id="cb7-82"><a href="#cb7-82" tabindex="-1"></a>spde_fit2_7 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span></span>
-<span id="cb7-83"><a href="#cb7-83" tabindex="-1"></a>                      road_type2 <span class="sc">+</span> road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
-<span id="cb7-84"><a href="#cb7-84" tabindex="-1"></a>                      invsqrt_dist_mosque <span class="sc">+</span> invsqrt_dist_education <span class="sc">+</span> invsqrt_dist_finance <span class="sc">+</span></span>
-<span id="cb7-85"><a href="#cb7-85" tabindex="-1"></a>                      invsqrt_dist_hospital <span class="sc">+</span> invsqrt_dist_intersection <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-86"><a href="#cb7-86" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-87"><a href="#cb7-87" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-88"><a href="#cb7-88" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-89"><a href="#cb7-89" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e)</span>
-<span id="cb7-90"><a href="#cb7-90" tabindex="-1"></a></span>
-<span id="cb7-91"><a href="#cb7-91" tabindex="-1"></a>spde_fit2_7_2 <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> intensity <span class="sc">+</span> road_type1 <span class="sc">+</span></span>
-<span id="cb7-92"><a href="#cb7-92" tabindex="-1"></a>                      road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
-<span id="cb7-93"><a href="#cb7-93" tabindex="-1"></a>                      invsqrt_dist_education <span class="sc">+</span> invsqrt_dist_finance <span class="sc">+</span></span>
-<span id="cb7-94"><a href="#cb7-94" tabindex="-1"></a>                      <span class="fu">f</span>(field, <span class="at">model =</span> spde_model2),</span>
-<span id="cb7-95"><a href="#cb7-95" tabindex="-1"></a>                    <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk2),</span>
-<span id="cb7-96"><a href="#cb7-96" tabindex="-1"></a>                    <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk2)),</span>
-<span id="cb7-97"><a href="#cb7-97" tabindex="-1"></a>                    <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb7-98"><a href="#cb7-98" tabindex="-1"></a>                    <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk2)<span class="sc">$</span>e)</span></code></pre></div>
+<h2><span class="header-section-number">7</span> Adding Observations and
+Mesh Covariates</h2>
+<p>We add the observed events and provide the covariates at mesh
+locations via <code>manual_covariates</code>. The wrapper handles
+integration weights internally.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>n_total <span class="ot">&lt;-</span> <span class="fu">sum</span>(n_accidents)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">clear_observations</span>()</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="co"># Add observed events with covariates</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">add_observations</span>(</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="at">data =</span> <span class="fu">data.frame</span>(</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>    <span class="at">y =</span> <span class="fu">rep</span>(<span class="dv">1</span>, n_total),</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>    <span class="at">Intercept =</span> <span class="dv">1</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>    <span class="at">speed_limit =</span> data_on_graph<span class="sc">$</span>SpeedLimit,</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>    <span class="at">road_type1 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC1,</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>    <span class="at">road_type2 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC2,</span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>    <span class="at">road_type3 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC3,</span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>    <span class="at">road_type4 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC4,</span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>    <span class="at">road_type5 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC5,</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>    <span class="at">road_type6 =</span> road_types_graph_data_dummy<span class="sc">$</span>FRC6,</span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>    <span class="at">log_dist_education    =</span> data_on_graph<span class="sc">$</span>log_distance_to_education,</span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>    <span class="at">log_dist_finance      =</span> data_on_graph<span class="sc">$</span>log_distance_to_finance,</span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>    <span class="at">log_dist_hospital     =</span> data_on_graph<span class="sc">$</span>log_distance_to_hospital,</span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>    <span class="at">log_dist_intersection =</span> data_on_graph<span class="sc">$</span>log_distance_to_intersection,</span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>    <span class="at">edge_number =</span> data_on_graph<span class="sc">$</span>.edge_number,</span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>    <span class="at">distance_on_edge =</span> data_on_graph<span class="sc">$</span>.distance_on_edge</span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>  ),</span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a>  <span class="at">normalized =</span> <span class="cn">TRUE</span></span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>)</span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a></span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a><span class="co"># Covariates at mesh locations (for integration)</span></span>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a>manual_cov <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a>  <span class="at">Intercept =</span> <span class="fu">rep</span>(<span class="dv">1</span>, <span class="fu">nrow</span>(graph<span class="sc">$</span>mesh<span class="sc">$</span>VtE)),</span>
+<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a>  <span class="at">speed_limit =</span> data_on_mesh<span class="sc">$</span>SpeedLimit,</span>
+<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a>  <span class="at">road_type1 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC1,</span>
+<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a>  <span class="at">road_type2 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC2,</span>
+<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a>  <span class="at">road_type3 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC3,</span>
+<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a>  <span class="at">road_type4 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC4,</span>
+<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a>  <span class="at">road_type5 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC5,</span>
+<span id="cb8-35"><a href="#cb8-35" tabindex="-1"></a>  <span class="at">road_type6 =</span> road_types_graph_mesh_dummy<span class="sc">$</span>FRC6,</span>
+<span id="cb8-36"><a href="#cb8-36" tabindex="-1"></a>  <span class="at">log_dist_education    =</span> data_on_mesh<span class="sc">$</span>log_distance_to_education,</span>
+<span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a>  <span class="at">log_dist_finance      =</span> data_on_mesh<span class="sc">$</span>log_distance_to_finance,</span>
+<span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a>  <span class="at">log_dist_hospital     =</span> data_on_mesh<span class="sc">$</span>log_distance_to_hospital,</span>
+<span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a>  <span class="at">log_dist_intersection =</span> data_on_mesh<span class="sc">$</span>log_distance_to_intersection,</span>
+<span id="cb8-40"><a href="#cb8-40" tabindex="-1"></a>  <span class="at">coord_x =</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>V[,<span class="dv">1</span>],</span>
+<span id="cb8-41"><a href="#cb8-41" tabindex="-1"></a>  <span class="at">coord_y =</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>V[,<span class="dv">2</span>],</span>
+<span id="cb8-42"><a href="#cb8-42" tabindex="-1"></a>  <span class="at">edge_number =</span> data_on_mesh<span class="sc">$</span>.edge_number,</span>
+<span id="cb8-43"><a href="#cb8-43" tabindex="-1"></a>  <span class="at">distance_on_edge =</span> data_on_mesh<span class="sc">$</span>.distance_on_edge,</span>
+<span id="cb8-44"><a href="#cb8-44" tabindex="-1"></a>  <span class="at">.group =</span> <span class="dv">1</span></span>
+<span id="cb8-45"><a href="#cb8-45" tabindex="-1"></a>)</span></code></pre></div>
 </div>
-<div id="visualizing-credible-intervals" class="section level3"
-number="8">
-<h3><span class="header-section-number">8</span> Visualizing Credible
-Intervals</h3>
-<p>For each model we extract the 95% credible intervals of key
-covariates. The following loop produces simple interval plots to assess
-significance.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>plotCredibleInterval <span class="ot">&lt;-</span> <span class="cf">function</span>(spde_fit) {</span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  <span class="co"># Extract the intervals</span></span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  intervals <span class="ot">&lt;-</span> spde_fit<span class="sc">$</span>summary.fixed[<span class="fu">c</span>(<span class="dv">3</span>,<span class="dv">5</span>)]</span>
-<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>  df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>    <span class="at">Parameter =</span> <span class="fu">rownames</span>(intervals),</span>
-<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>    <span class="at">Lower =</span> intervals[, <span class="st">&quot;0.025quant&quot;</span>],</span>
-<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>    <span class="at">Upper =</span> intervals[, <span class="st">&quot;0.975quant&quot;</span>]</span>
-<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>  )</span>
-<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>  <span class="co"># Add a new column that checks if the interval includes 0</span></span>
-<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>  df<span class="sc">$</span>IncludesZero <span class="ot">&lt;-</span> df<span class="sc">$</span>Lower <span class="sc">*</span> df<span class="sc">$</span>Upper <span class="sc">&lt;=</span> <span class="dv">0</span></span>
-<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> Parameter, <span class="at">y =</span> <span class="dv">0</span>, <span class="at">color =</span> IncludesZero)) <span class="sc">+</span></span>
-<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a>    <span class="fu">geom_errorbar</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> Lower, <span class="at">ymax =</span> Upper), <span class="at">width =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
-<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>    <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>) <span class="sc">+</span></span>
-<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>    <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">&quot;TRUE&quot;</span> <span class="ot">=</span> <span class="st">&quot;black&quot;</span>, <span class="st">&quot;FALSE&quot;</span> <span class="ot">=</span> <span class="st">&quot;red&quot;</span>)) <span class="sc">+</span></span>
-<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>    <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="st">&quot;Value&quot;</span>) <span class="sc">+</span></span>
-<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">&quot;Parameter&quot;</span>) <span class="sc">+</span></span>
-<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="st">&quot;95% Credible Interval&quot;</span>) <span class="sc">+</span></span>
-<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span>)</span>
-<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>  <span class="fu">print</span>(p)</span>
-<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>}</span>
-<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a></span>
-<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="co"># Plot the credible intervals</span></span>
-<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">7</span>){</span>
-<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>  <span class="fu">plotCredibleInterval</span>(<span class="fu">get</span>(<span class="fu">paste0</span>(<span class="st">&quot;spde_fit2_&quot;</span>, i)))</span>
-<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a>}</span>
-<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a></span>
-<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a><span class="co"># After analysing and removing the not significant covariates </span></span>
-<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">5</span><span class="sc">:</span><span class="dv">7</span>){</span>
-<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a>  <span class="fu">plotCredibleInterval</span>(<span class="fu">get</span>(<span class="fu">paste0</span>(<span class="st">&quot;spde_fit2_&quot;</span>, i, <span class="st">&quot;_2&quot;</span>)))</span>
-<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a>}</span>
-<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a></span>
-<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a></span>
-<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a><span class="co"># A table of results for the different models to compare the mean parameters of kappa and tau</span></span>
-<span id="cb8-35"><a href="#cb8-35" tabindex="-1"></a><span class="co"># to extract mean = c(spde_result$summary.kappa$mean,spde_result$summary.tau$mean)</span></span>
-<span id="cb8-36"><a href="#cb8-36" tabindex="-1"></a></span>
-<span id="cb8-37"><a href="#cb8-37" tabindex="-1"></a>df_mean <span class="ot">=</span> <span class="fu">data.frame</span>(</span>
-<span id="cb8-38"><a href="#cb8-38" tabindex="-1"></a>  <span class="at">Model =</span> <span class="fu">c</span>(<span class="st">&quot;Model 1&quot;</span>, <span class="st">&quot;Model 2&quot;</span>, <span class="st">&quot;Model 3&quot;</span>, <span class="st">&quot;Model 4&quot;</span>, <span class="st">&quot;Model 5&quot;</span>, <span class="st">&quot;Model 6&quot;</span>, <span class="st">&quot;Model 7&quot;</span>),</span>
-<span id="cb8-39"><a href="#cb8-39" tabindex="-1"></a>  <span class="at">kappa =</span> <span class="fu">c</span>(<span class="fl">0.000</span>, <span class="fl">0.000</span>, <span class="fl">0.000</span>, <span class="fl">0.000</span>, <span class="fl">0.000</span>, <span class="fl">0.000</span>, <span class="fl">0.000</span>),</span>
-<span id="cb8-40"><a href="#cb8-40" tabindex="-1"></a>  <span class="at">tau =</span> <span class="fu">c</span>(<span class="fl">0.000</span>, <span class="fl">0.000</span>, <span class="fl">0.000</span>, <span class="fl">0.000</span>, <span class="fl">0.000</span>, <span class="fl">0.000</span>, <span class="fl">0.000</span>)</span>
-<span id="cb8-41"><a href="#cb8-41" tabindex="-1"></a>)</span>
-<span id="cb8-42"><a href="#cb8-42" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">7</span>) {</span>
-<span id="cb8-43"><a href="#cb8-43" tabindex="-1"></a>  spde_result <span class="ot">&lt;-</span> <span class="fu">spde_metric_graph_result</span>(<span class="fu">get</span>(<span class="fu">paste0</span>(<span class="st">&quot;spde_fit2_&quot;</span>, i)), <span class="st">&quot;field&quot;</span>, spde_model2)</span>
-<span id="cb8-44"><a href="#cb8-44" tabindex="-1"></a>  df_mean<span class="sc">$</span>kappa[i] <span class="ot">&lt;-</span> spde_result<span class="sc">$</span>summary.kappa<span class="sc">$</span>mean</span>
-<span id="cb8-45"><a href="#cb8-45" tabindex="-1"></a>  df_mean<span class="sc">$</span>tau[i] <span class="ot">&lt;-</span> spde_result<span class="sc">$</span>summary.tau<span class="sc">$</span>mean</span>
-<span id="cb8-46"><a href="#cb8-46" tabindex="-1"></a>}</span>
-<span id="cb8-47"><a href="#cb8-47" tabindex="-1"></a><span class="co"># Plot the results</span></span>
-<span id="cb8-48"><a href="#cb8-48" tabindex="-1"></a><span class="fu">plot</span>(df_mean<span class="sc">$</span>kappa, df_mean<span class="sc">$</span>tau, <span class="at">xlab =</span> <span class="st">&quot;kappa&quot;</span>, <span class="at">ylab =</span> <span class="st">&quot;tau&quot;</span>, <span class="at">main =</span> <span class="st">&quot;Model Comparison&quot;</span>)</span></code></pre></div>
+<div id="fitting-model-2" class="section level2" number="8">
+<h2><span class="header-section-number">8</span> Fitting Model 2</h2>
+<p>We build the SPDE model and fit using the <code>lgcp_graph</code>
+wrapper. The formula includes the intercept, speed limit, FRC categories
+(1–6, with FRC7 as reference), log-distances to amenities, and the
+Whittle–Matérn field.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>spde_model <span class="ot">&lt;-</span> <span class="fu">graph_spde</span>(graph, <span class="at">alpha =</span> <span class="dv">1</span>, <span class="at">LGCP =</span> <span class="cn">TRUE</span>, <span class="at">parameterization =</span> <span class="st">&quot;spde&quot;</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="fu">system.time</span>(fit_model2 <span class="ot">&lt;-</span> <span class="fu">lgcp_graph</span>(</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> speed_limit <span class="sc">+</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>    road_type1 <span class="sc">+</span> road_type2 <span class="sc">+</span> road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>    log_dist_education <span class="sc">+</span> log_dist_hospital <span class="sc">+</span> log_dist_finance <span class="sc">+</span> log_dist_intersection <span class="sc">+</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>    <span class="fu">f</span>(field, <span class="at">model =</span> spde_model),</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>  <span class="at">graph =</span> graph,</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>  <span class="at">manual_covariates =</span> manual_cov,</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>  <span class="at">interpolate =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>  <span class="at">use_current_mesh =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>, <span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">cpo =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>  <span class="at">control.fixed =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">Intercept =</span> <span class="dv">0</span>, <span class="at">speed_limit =</span> <span class="dv">0</span>,</span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>                                    <span class="at">road_type1 =</span> <span class="dv">0</span>, <span class="at">road_type2 =</span> <span class="dv">0</span>, <span class="at">road_type3 =</span> <span class="dv">0</span>,</span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>                                    <span class="at">road_type4 =</span> <span class="dv">0</span>, <span class="at">road_type5 =</span> <span class="dv">0</span>, <span class="at">road_type6 =</span> <span class="dv">0</span>)),</span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>  <span class="at">control.inla =</span> <span class="fu">list</span>(<span class="at">control.vb =</span> <span class="fu">list</span>(<span class="at">enable =</span> <span class="cn">FALSE</span>), <span class="at">int.strategy =</span> <span class="st">&quot;eb&quot;</span>)</span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>))</span></code></pre></div>
+<pre><code>##    user  system elapsed 
+## 730.584 208.596 892.221</code></pre>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">summary</span>(fit_model2)</span></code></pre></div>
+<pre><code>## Time used:
+##     Pre = 7.25, Running = 64.1, Post = 11.6, Total = 83 
+## Fixed effects:
+##                         mean    sd 0.025quant 0.5quant 0.975quant   mode kld
+## Intercept              0.136 0.469     -0.784    0.136      1.056  0.136   0
+## speed_limit            1.375 0.180      1.023    1.375      1.727  1.375   0
+## road_type1             2.125 0.249      1.638    2.125      2.612  2.125   0
+## road_type2             2.905 0.129      2.651    2.905      3.158  2.905   0
+## road_type3             2.847 0.091      2.668    2.847      3.026  2.847   0
+## road_type4             2.579 0.098      2.387    2.579      2.772  2.579   0
+## road_type5             2.492 0.079      2.338    2.492      2.647  2.492   0
+## road_type6             1.729 0.075      1.582    1.729      1.875  1.729   0
+## log_dist_education    -0.486 0.444     -1.355   -0.486      0.383 -0.486   0
+## log_dist_hospital     -1.374 0.382     -2.122   -1.374     -0.625 -1.374   0
+## log_dist_finance      -1.358 0.317     -1.980   -1.358     -0.736 -1.358   0
+## log_dist_intersection -1.553 0.379     -2.295   -1.553     -0.811 -1.553   0
+## 
+## Random effects:
+##   Name     Model
+##     field CGeneric
+## 
+## Model hyperparameters:
+##                    mean    sd 0.025quant 0.5quant 0.975quant   mode
+## Theta1 for field  0.789 0.058      0.671    0.789      0.901  0.793
+## Theta2 for field -1.820 0.306     -2.453   -1.810     -1.249 -1.765
+## 
+## Deviance Information Criterion (DIC) ...............: 8295.76
+## Deviance Information Criterion (DIC, saturated) ....: 1244861.02
+## Effective number of parameters .....................: 1566.42
+## 
+## Watanabe-Akaike information criterion (WAIC) ...: 8088.12
+## Effective number of parameters .................: 1311.77
+## 
+## Marginal log-Likelihood:  -3989.73 
+## CPO, PIT is computed 
+## Posterior summaries for the linear predictor and the fitted values are computed
+## (Posterior marginals needs also &#39;control.compute=list(return.marginals.predictor=TRUE)&#39;)</code></pre>
 </div>
-<div id="extracting-and-plotting-final-model-results"
-class="section level3" number="9">
-<h3><span class="header-section-number">9</span> Extracting and Plotting
-Final Model Results</h3>
-<p>We now extract the results from our chosen final model
-(<code>spde_fit2_5</code>), compute parameter summaries, and visualize
-the posterior distributions. This final block also includes saving plots
-of the spatial intensity and latent field.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>spde_result <span class="ot">&lt;-</span> <span class="fu">spde_metric_graph_result</span>(spde_fit2_5, <span class="st">&quot;field&quot;</span>, spde_model2)</span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">round</span>(spde_result<span class="sc">$</span>summary.kappa,<span class="dv">3</span>)</span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>fit_result5 <span class="ot">=</span> <span class="fu">summary</span>(spde_fit2_5)</span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>fit_result5</span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a></span>
-<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>alpha <span class="ot">&lt;-</span> <span class="dv">1</span></span>
-<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>nu <span class="ot">&lt;-</span> alpha <span class="sc">-</span> <span class="fl">0.5</span></span>
-<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>kappa <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="dv">8</span> <span class="sc">*</span> nu) <span class="sc">/</span> range</span>
-<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>tau <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">gamma</span>(nu) <span class="sc">/</span> (sigma<span class="sc">^</span><span class="dv">2</span> <span class="sc">*</span> <span class="fu">gamma</span>(alpha) <span class="sc">*</span> <span class="fu">sqrt</span>(<span class="dv">4</span> <span class="sc">*</span> pi) <span class="sc">*</span> kappa<span class="sc">^</span>(<span class="dv">2</span> <span class="sc">*</span> nu)))</span>
-<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a></span>
-<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co"># For &quot;spde&quot; parameterization</span></span>
-<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>result_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>  <span class="at">parameter =</span> <span class="fu">c</span>(<span class="st">&quot;kappa&quot;</span>, <span class="st">&quot;tau&quot;</span>),</span>
-<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>  <span class="at">mean =</span> <span class="fu">c</span>(</span>
-<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>    spde_result<span class="sc">$</span>summary.kappa<span class="sc">$</span>mean,</span>
-<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>    spde_result<span class="sc">$</span>summary.tau<span class="sc">$</span>mean</span>
-<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>  ),</span>
-<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a>  <span class="at">mode =</span> <span class="fu">c</span>(</span>
-<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>    spde_result<span class="sc">$</span>summary.kappa<span class="sc">$</span>mode,</span>
-<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a>    spde_result<span class="sc">$</span>summary.tau<span class="sc">$</span>mode</span>
-<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a>  )</span>
-<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a>)</span>
-<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a><span class="fu">print</span>(result_df)</span>
-<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a></span>
-<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a></span>
-<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a><span class="co"># For &quot;matern&quot; parameterization</span></span>
-<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a>result_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb9-28"><a href="#cb9-28" tabindex="-1"></a>  <span class="at">parameter =</span> <span class="fu">c</span>(<span class="st">&quot;sigma&quot;</span>, <span class="st">&quot;range&quot;</span>),</span>
-<span id="cb9-29"><a href="#cb9-29" tabindex="-1"></a>  <span class="at">rspde_version =</span> <span class="fu">c</span>(sigma, range),</span>
-<span id="cb9-30"><a href="#cb9-30" tabindex="-1"></a>  <span class="at">mean_exact =</span> <span class="fu">c</span>(</span>
-<span id="cb9-31"><a href="#cb9-31" tabindex="-1"></a>    spde_result<span class="sc">$</span>summary.sigma<span class="sc">$</span>mean,</span>
-<span id="cb9-32"><a href="#cb9-32" tabindex="-1"></a>    spde_result<span class="sc">$</span>summary.range<span class="sc">$</span>mean</span>
-<span id="cb9-33"><a href="#cb9-33" tabindex="-1"></a>  ),</span>
-<span id="cb9-34"><a href="#cb9-34" tabindex="-1"></a>  <span class="at">mode_exact =</span> <span class="fu">c</span>(</span>
-<span id="cb9-35"><a href="#cb9-35" tabindex="-1"></a>    spde_result<span class="sc">$</span>summary.sigma<span class="sc">$</span>mode,</span>
-<span id="cb9-36"><a href="#cb9-36" tabindex="-1"></a>    spde_result<span class="sc">$</span>summary.range<span class="sc">$</span>mode</span>
-<span id="cb9-37"><a href="#cb9-37" tabindex="-1"></a>  )</span>
-<span id="cb9-38"><a href="#cb9-38" tabindex="-1"></a>)</span>
-<span id="cb9-39"><a href="#cb9-39" tabindex="-1"></a><span class="fu">print</span>(result_df)</span>
-<span id="cb9-40"><a href="#cb9-40" tabindex="-1"></a></span>
-<span id="cb9-41"><a href="#cb9-41" tabindex="-1"></a><span class="co"># Plotting the posterior distribution of the parameters</span></span>
-<span id="cb9-42"><a href="#cb9-42" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb9-43"><a href="#cb9-43" tabindex="-1"></a>posterior_df_fit <span class="ot">&lt;-</span> <span class="fu">gg_df</span>(spde_result)</span>
-<span id="cb9-44"><a href="#cb9-44" tabindex="-1"></a><span class="fu">ggplot</span>(posterior_df_fit) <span class="sc">+</span></span>
-<span id="cb9-45"><a href="#cb9-45" tabindex="-1"></a> <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y)) <span class="sc">+</span></span>
-<span id="cb9-46"><a href="#cb9-46" tabindex="-1"></a> <span class="fu">facet_wrap</span>(<span class="sc">~</span>parameter, <span class="at">scales =</span> <span class="st">&quot;free&quot;</span>) <span class="sc">+</span></span>
-<span id="cb9-47"><a href="#cb9-47" tabindex="-1"></a> <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">&quot;Density&quot;</span>)</span></code></pre></div>
+<div id="extracting-spde-parameters" class="section level2" number="9">
+<h2><span class="header-section-number">9</span> Extracting SPDE
+Parameters</h2>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>spde_result <span class="ot">&lt;-</span> <span class="fu">spde_metric_graph_result</span>(fit_model2, <span class="st">&quot;field&quot;</span>, spde_model)</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>result_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  <span class="at">parameter =</span> <span class="fu">c</span>(<span class="st">&quot;kappa&quot;</span>, <span class="st">&quot;tau&quot;</span>),</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>  <span class="at">mean =</span> <span class="fu">c</span>(spde_result<span class="sc">$</span>summary.kappa<span class="sc">$</span>mean, spde_result<span class="sc">$</span>summary.tau<span class="sc">$</span>mean),</span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>  <span class="at">lower =</span> <span class="fu">c</span>(spde_result<span class="sc">$</span>summary.kappa<span class="sc">$</span><span class="st">&quot;0.025quant&quot;</span>, spde_result<span class="sc">$</span>summary.tau<span class="sc">$</span><span class="st">&quot;0.025quant&quot;</span>),</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>  <span class="at">upper =</span> <span class="fu">c</span>(spde_result<span class="sc">$</span>summary.kappa<span class="sc">$</span><span class="st">&quot;0.975quant&quot;</span>, spde_result<span class="sc">$</span>summary.tau<span class="sc">$</span><span class="st">&quot;0.975quant&quot;</span>),</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>  <span class="at">mode =</span> <span class="fu">c</span>(spde_result<span class="sc">$</span>summary.kappa<span class="sc">$</span>mode, spde_result<span class="sc">$</span>summary.tau<span class="sc">$</span>mode)</span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>)</span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="fu">print</span>(result_df)</span></code></pre></div>
+<pre><code>##   parameter      mean      lower     upper      mode
+## 1     kappa 0.1695561 0.08657382 0.2856865 0.1528567
+## 2       tau 0.4552310 0.40636419 0.5104304 0.4511782</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="fu">save.image</span>(<span class="st">&quot;Data/5Fit_model2_alpha1_exact_50m_upd.RData&quot;</span>)</span></code></pre></div>
 </div>
-<div id="plotting-and-saving-spatial-outputs" class="section level3"
-number="10">
-<h3><span class="header-section-number">10</span> Plotting and Saving
-Spatial Outputs</h3>
-<p>Finally, we plot and save various spatial outputs (intensity maps and
-latent field plots).</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="do">###### Extracting results ######</span></span>
-<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="co"># summary.random - contains the posterior mean of the unstructured random effect, u(s)</span></span>
-<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="co"># summary.fitted.values - contains the predicted intensity (mean number of events per unit area), lambda</span></span>
-<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="co"># summary.linear.predictor - contains the posterior mean of the linear predictor, log(lambda)</span></span>
-<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a></span>
-<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="fu">library</span>(scico)</span>
-<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="fu">library</span>(gridExtra)</span>
-<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="fu">library</span>(gridExtra)</span>
-<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="fu">library</span>(viridis)</span>
-<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="fu">library</span>(RColorBrewer)</span>
-<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a> <span class="co"># Function to plot and save results</span></span>
-<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>plot_and_save_results <span class="ot">&lt;-</span> <span class="cf">function</span>(fit_object, graph, stk, file_prefix) {</span>
-<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>   <span class="co"># Extracting intensity results</span></span>
-<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a>   index <span class="ot">&lt;-</span> <span class="fu">inla.stack.index</span>(stk, <span class="at">tag =</span> <span class="st">&quot;data&quot;</span>)<span class="sc">$</span>effect</span>
-<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a>   lambda_mean <span class="ot">&lt;-</span> fit_object<span class="sc">$</span>summary.fitted.values[index, <span class="st">&quot;mean&quot;</span>]</span>
-<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a></span>
-<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a>   <span class="do">#### Intensity Plot Variations ####</span></span>
-<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a></span>
-<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a>   <span class="co"># Colormap 1: vik with white background (scico + theme_minimal)</span></span>
-<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a>   <span class="fu">png</span>(<span class="fu">paste0</span>(file_prefix, <span class="st">&quot;_intensity_vik_minimal.png&quot;</span>), <span class="at">height =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">700</span>, <span class="at">width =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">900</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
-<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a>   p_vik_minimal <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(<span class="at">X =</span> <span class="fu">exp</span>(lambda_mean), <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>, <span class="at">scale_color =</span> <span class="fu">scale_color_scico</span>(<span class="at">palette =</span> <span class="st">&quot;vik&quot;</span>, <span class="at">midpoint =</span> <span class="dv">0</span>, <span class="at">begin =</span> <span class="fl">0.1</span>)) <span class="sc">+</span></span>
-<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a>     <span class="fu">ggtitle</span>(<span class="fu">expression</span>(<span class="fu">paste</span>(lambda, <span class="st">&quot;, intensity&quot;</span>))) <span class="sc">+</span></span>
-<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a>     <span class="fu">theme_minimal</span>()</span>
-<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a>   <span class="fu">print</span>(p_vik_minimal)</span>
-<span id="cb10-26"><a href="#cb10-26" tabindex="-1"></a>   <span class="fu">dev.off</span>()</span>
-<span id="cb10-27"><a href="#cb10-27" tabindex="-1"></a></span>
-<span id="cb10-28"><a href="#cb10-28" tabindex="-1"></a>   <span class="co"># Colormap 2: viridis</span></span>
-<span id="cb10-29"><a href="#cb10-29" tabindex="-1"></a>   <span class="fu">png</span>(<span class="fu">paste0</span>(file_prefix, <span class="st">&quot;_intensity_viridis.png&quot;</span>), <span class="at">height =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">700</span>, <span class="at">width =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">900</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
-<span id="cb10-30"><a href="#cb10-30" tabindex="-1"></a>   p_viridis <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(<span class="at">X =</span> <span class="fu">exp</span>(lambda_mean), <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>, <span class="at">scale_color =</span> <span class="fu">scale_color_viridis</span>(<span class="at">option =</span> <span class="st">&quot;D&quot;</span>, <span class="at">direction =</span> <span class="dv">1</span>)) <span class="sc">+</span></span>
-<span id="cb10-31"><a href="#cb10-31" tabindex="-1"></a>     <span class="fu">ggtitle</span>(<span class="fu">expression</span>(<span class="fu">paste</span>(lambda, <span class="st">&quot;, intensity&quot;</span>))) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
-<span id="cb10-32"><a href="#cb10-32" tabindex="-1"></a>   <span class="fu">print</span>(p_viridis)</span>
-<span id="cb10-33"><a href="#cb10-33" tabindex="-1"></a>   <span class="fu">dev.off</span>()</span>
-<span id="cb10-34"><a href="#cb10-34" tabindex="-1"></a></span>
-<span id="cb10-35"><a href="#cb10-35" tabindex="-1"></a>   <span class="co"># Colormap 4: plasma (viridis)</span></span>
-<span id="cb10-36"><a href="#cb10-36" tabindex="-1"></a>   <span class="fu">png</span>(<span class="fu">paste0</span>(file_prefix, <span class="st">&quot;_intensity_plasma.png&quot;</span>), <span class="at">height =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">700</span>, <span class="at">width =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">900</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
-<span id="cb10-37"><a href="#cb10-37" tabindex="-1"></a>   p_plasma <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(<span class="at">X =</span> <span class="fu">exp</span>(lambda_mean), <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>, <span class="at">scale_color =</span> <span class="fu">scale_color_viridis</span>(<span class="at">option =</span> <span class="st">&quot;plasma&quot;</span>, <span class="at">direction =</span> <span class="dv">1</span>)) <span class="sc">+</span></span>
-<span id="cb10-38"><a href="#cb10-38" tabindex="-1"></a>     <span class="fu">ggtitle</span>(<span class="fu">expression</span>(<span class="fu">paste</span>(lambda, <span class="st">&quot;, intensity&quot;</span>))) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
-<span id="cb10-39"><a href="#cb10-39" tabindex="-1"></a>   <span class="fu">print</span>(p_plasma)</span>
-<span id="cb10-40"><a href="#cb10-40" tabindex="-1"></a>   <span class="fu">dev.off</span>()</span>
-<span id="cb10-41"><a href="#cb10-41" tabindex="-1"></a>   </span>
-<span id="cb10-42"><a href="#cb10-42" tabindex="-1"></a>   <span class="do">#### Latent Field Plot Variations ####</span></span>
-<span id="cb10-43"><a href="#cb10-43" tabindex="-1"></a>   u_posterior_mean <span class="ot">&lt;-</span> fit_object<span class="sc">$</span>summary.random<span class="sc">$</span>field[[<span class="st">&quot;mean&quot;</span>]]</span>
-<span id="cb10-44"><a href="#cb10-44" tabindex="-1"></a>  </span>
-<span id="cb10-45"><a href="#cb10-45" tabindex="-1"></a>   <span class="fu">png</span>(<span class="fu">paste0</span>(file_prefix, <span class="st">&quot;_posterior_u_vikO.png&quot;</span>), <span class="at">height =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">700</span>, <span class="at">width =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">900</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
-<span id="cb10-46"><a href="#cb10-46" tabindex="-1"></a>   p1 <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(<span class="at">X =</span> u_posterior_mean, <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>, <span class="at">scale_color =</span> <span class="fu">scale_color_scico</span>(<span class="at">palette =</span> <span class="st">&quot;vikO&quot;</span>, <span class="at">midpoint =</span> <span class="dv">0</span>)) <span class="sc">+</span></span>
-<span id="cb10-47"><a href="#cb10-47" tabindex="-1"></a>     <span class="fu">ggtitle</span>(<span class="fu">expression</span>(<span class="sc">~</span>u)) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
-<span id="cb10-48"><a href="#cb10-48" tabindex="-1"></a>   <span class="fu">print</span>(p1)</span>
-<span id="cb10-49"><a href="#cb10-49" tabindex="-1"></a>   <span class="fu">dev.off</span>()</span>
-<span id="cb10-50"><a href="#cb10-50" tabindex="-1"></a></span>
-<span id="cb10-51"><a href="#cb10-51" tabindex="-1"></a>   </span>
-<span id="cb10-52"><a href="#cb10-52" tabindex="-1"></a>   <span class="co"># #### Log-Intensity Plot ####</span></span>
-<span id="cb10-53"><a href="#cb10-53" tabindex="-1"></a>   </span>
-<span id="cb10-54"><a href="#cb10-54" tabindex="-1"></a>   <span class="fu">png</span>(<span class="fu">paste0</span>(file_prefix, <span class="st">&quot;_log_intensity2.png&quot;</span>), <span class="at">height =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">700</span>, <span class="at">width =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">900</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
-<span id="cb10-55"><a href="#cb10-55" tabindex="-1"></a>   p32 <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(<span class="at">X =</span> log_lambda, <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>, <span class="at">scale_color =</span> <span class="fu">scale_color_scico</span>(<span class="at">palette =</span> <span class="st">&quot;vik&quot;</span>, <span class="at">midpoint =</span> <span class="dv">0</span>)) <span class="sc">+</span></span>
-<span id="cb10-56"><a href="#cb10-56" tabindex="-1"></a>     <span class="fu">ggtitle</span>(<span class="fu">expression</span>(<span class="sc">~</span> <span class="fu">log</span>(lambda))) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
-<span id="cb10-57"><a href="#cb10-57" tabindex="-1"></a>   <span class="fu">print</span>(p32)</span>
-<span id="cb10-58"><a href="#cb10-58" tabindex="-1"></a>   <span class="fu">dev.off</span>()</span>
-<span id="cb10-59"><a href="#cb10-59" tabindex="-1"></a> }</span>
-<span id="cb10-60"><a href="#cb10-60" tabindex="-1"></a> <span class="fu">plot_and_save_results</span>(spde_fit2_5, graph, stk2, <span class="st">&quot;Figures/5Graph_model2_alpha1_7FRC_pruned_exact_100m_ver5&quot;</span>)</span></code></pre></div>
-<p>The model results are visualized in the following plots: 1.
-<strong>Latent Field Plot Variations</strong>:
-<img src="Figures/5Graph_model2_alpha1_7FRC_pruned_exact_100m_posterior_u_vikO.png" width="1350" style="display: block; margin: auto;" /></p>
-<ol start="2" style="list-style-type: decimal">
-<li><strong>Log-Intensity Plot</strong>:
-<img src="Figures/5Graph_model2_alpha1_7FRC_pruned_exact_100m_ver5_log_intensity2.png" width="1350" style="display: block; margin: auto;" /></li>
-</ol>
+<div id="posterior-distributions-of-fixed-effects"
+class="section level2" number="10">
+<h2><span class="header-section-number">10</span> Posterior
+Distributions of Fixed Effects</h2>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a><span class="co"># Fixed effects summary table</span></span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>fit_model2<span class="sc">$</span>summary.fixed</span></code></pre></div>
+<pre><code>##                             mean         sd 0.025quant   0.5quant 0.975quant
+## Intercept              0.1358480 0.46945381 -0.7842645  0.1358480  1.0559606
+## speed_limit            1.3751175 0.17953992  1.0232258  1.3751175  1.7270093
+## road_type1             2.1245943 0.24850873  1.6375262  2.1245943  2.6116625
+## road_type2             2.9047984 0.12932809  2.6513200  2.9047984  3.1582768
+## road_type3             2.8466007 0.09129248  2.6676707  2.8466007  3.0255306
+## road_type4             2.5794737 0.09799509  2.3874069  2.5794737  2.7715406
+## road_type5             2.4921395 0.07880750  2.3376797  2.4921395  2.6465994
+## road_type6             1.7286195 0.07457293  1.5824592  1.7286195  1.8747797
+## log_dist_education    -0.4860146 0.44359596 -1.3554467 -0.4860146  0.3834175
+## log_dist_hospital     -1.3737057 0.38192780 -2.1222704 -1.3737057 -0.6251409
+## log_dist_finance      -1.3581725 0.31746332 -1.9803892 -1.3581725 -0.7359558
+## log_dist_intersection -1.5532552 0.37859206 -2.2952820 -1.5532552 -0.8112284
+##                             mode          kld
+## Intercept              0.1358480 0.000000e+00
+## speed_limit            1.3751175 0.000000e+00
+## road_type1             2.1245943 0.000000e+00
+## road_type2             2.9047984 4.339274e-14
+## road_type3             2.8466007 8.168524e-15
+## road_type4             2.5794737 3.662094e-14
+## road_type5             2.4921395 0.000000e+00
+## road_type6             1.7286195 0.000000e+00
+## log_dist_education    -0.4860146 7.762095e-18
+## log_dist_hospital     -1.3737057 0.000000e+00
+## log_dist_finance      -1.3581725 8.903057e-16
+## log_dist_intersection -1.5532552 0.000000e+00</code></pre>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="co"># Marginal posterior densities</span></span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>marginals_fixed <span class="ot">&lt;-</span> fit_model2<span class="sc">$</span>marginals.fixed</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a>df_fixed <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">names</span>(marginals_fixed), <span class="cf">function</span>(name) {</span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a>  m <span class="ot">&lt;-</span> <span class="fu">inla.smarginal</span>(marginals_fixed[[name]])</span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">parameter =</span> name, <span class="at">x =</span> m<span class="sc">$</span>x, <span class="at">y =</span> m<span class="sc">$</span>y)</span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a>}))</span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a><span class="fu">ggplot</span>(df_fixed, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y)) <span class="sc">+</span></span>
+<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb18-10"><a href="#cb18-10" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>, <span class="at">color =</span> <span class="st">&quot;red&quot;</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb18-11"><a href="#cb18-11" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>parameter, <span class="at">scales =</span> <span class="st">&quot;free&quot;</span>, <span class="at">ncol =</span> <span class="dv">4</span>) <span class="sc">+</span></span>
+<span id="cb18-12"><a href="#cb18-12" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;Value&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Density&quot;</span>) <span class="sc">+</span></span>
+<span id="cb18-13"><a href="#cb18-13" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div>
+<p><img src="model2_new_files/figure-html/unnamed-chunk-11-1.png" width="1152" style="display: block; margin: auto;" /></p>
+</div>
+<div id="posterior-distributions-of-spde-parameters"
+class="section level2" number="11">
+<h2><span class="header-section-number">11</span> Posterior
+Distributions of SPDE Parameters</h2>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a>marginals_spde <span class="ot">&lt;-</span> <span class="fu">rbind</span>(</span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>  <span class="fu">data.frame</span>(</span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>    <span class="at">parameter =</span> <span class="st">&quot;kappa&quot;</span>,</span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a>    <span class="at">x =</span> spde_result<span class="sc">$</span>marginals.kappa<span class="sc">$</span>kappa[, <span class="dv">1</span>],</span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a>    <span class="at">y =</span> spde_result<span class="sc">$</span>marginals.kappa<span class="sc">$</span>kappa[, <span class="dv">2</span>]</span>
+<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a>  ),</span>
+<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a>  <span class="fu">data.frame</span>(</span>
+<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a>    <span class="at">parameter =</span> <span class="st">&quot;tau&quot;</span>,</span>
+<span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a>    <span class="at">x =</span> spde_result<span class="sc">$</span>marginals.tau<span class="sc">$</span>tau[, <span class="dv">1</span>],</span>
+<span id="cb19-10"><a href="#cb19-10" tabindex="-1"></a>    <span class="at">y =</span> spde_result<span class="sc">$</span>marginals.tau<span class="sc">$</span>tau[, <span class="dv">2</span>]</span>
+<span id="cb19-11"><a href="#cb19-11" tabindex="-1"></a>  )</span>
+<span id="cb19-12"><a href="#cb19-12" tabindex="-1"></a>)</span>
+<span id="cb19-13"><a href="#cb19-13" tabindex="-1"></a></span>
+<span id="cb19-14"><a href="#cb19-14" tabindex="-1"></a><span class="fu">ggplot</span>(marginals_spde, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y)) <span class="sc">+</span></span>
+<span id="cb19-15"><a href="#cb19-15" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb19-16"><a href="#cb19-16" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>parameter, <span class="at">scales =</span> <span class="st">&quot;free&quot;</span>) <span class="sc">+</span></span>
+<span id="cb19-17"><a href="#cb19-17" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;Value&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Density&quot;</span>) <span class="sc">+</span></span>
+<span id="cb19-18"><a href="#cb19-18" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div>
+<p><img src="model2_new_files/figure-html/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="visualizing-model-results" class="section level2" number="12">
+<h2><span class="header-section-number">12</span> Visualizing Model
+Results</h2>
+<p>We compare the estimated log-intensity surfaces from Model 1
+(intercept + field only) and Model 2 (with covariates) side by side,
+using a shared color scale.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a><span class="fu">library</span>(scico)</span>
+<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a><span class="fu">library</span>(viridis)</span>
+<span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a><span class="fu">library</span>(gridExtra)</span>
+<span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a><span class="fu">library</span>(cowplot)</span>
+<span id="cb20-6"><a href="#cb20-6" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" tabindex="-1"></a><span class="co"># Common color range across both models (1st and 99th percentile)</span></span>
+<span id="cb20-8"><a href="#cb20-8" tabindex="-1"></a>log_lambda1 <span class="ot">&lt;-</span> model1<span class="sc">$</span>graph_fitted_data<span class="sc">$</span>.linear_predictor</span>
+<span id="cb20-9"><a href="#cb20-9" tabindex="-1"></a>log_lambda2 <span class="ot">&lt;-</span> fit_model2<span class="sc">$</span>graph_fitted_data<span class="sc">$</span>.linear_predictor</span>
+<span id="cb20-10"><a href="#cb20-10" tabindex="-1"></a>common_range <span class="ot">&lt;-</span> <span class="fu">quantile</span>(<span class="fu">c</span>(log_lambda1, log_lambda2), <span class="fu">c</span>(<span class="fl">0.01</span>, <span class="fl">0.99</span>))</span>
+<span id="cb20-11"><a href="#cb20-11" tabindex="-1"></a></span>
+<span id="cb20-12"><a href="#cb20-12" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(</span>
+<span id="cb20-13"><a href="#cb20-13" tabindex="-1"></a>  <span class="at">data =</span> <span class="st">&quot;.linear_predictor&quot;</span>,</span>
+<span id="cb20-14"><a href="#cb20-14" tabindex="-1"></a>  <span class="at">newdata =</span> model1<span class="sc">$</span>graph_fitted_data,</span>
+<span id="cb20-15"><a href="#cb20-15" tabindex="-1"></a>  <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>,</span>
+<span id="cb20-16"><a href="#cb20-16" tabindex="-1"></a>  <span class="at">scale_color =</span> <span class="fu">scale_color_viridis</span>(<span class="at">limits =</span> common_range, <span class="at">oob =</span> scales<span class="sc">::</span>squish)</span>
+<span id="cb20-17"><a href="#cb20-17" tabindex="-1"></a>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">&quot;Model 1&quot;</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>() <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span>)</span>
+<span id="cb20-18"><a href="#cb20-18" tabindex="-1"></a></span>
+<span id="cb20-19"><a href="#cb20-19" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(</span>
+<span id="cb20-20"><a href="#cb20-20" tabindex="-1"></a>  <span class="at">data =</span> <span class="st">&quot;.linear_predictor&quot;</span>,</span>
+<span id="cb20-21"><a href="#cb20-21" tabindex="-1"></a>  <span class="at">newdata =</span> fit_model2<span class="sc">$</span>graph_fitted_data,</span>
+<span id="cb20-22"><a href="#cb20-22" tabindex="-1"></a>  <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>,</span>
+<span id="cb20-23"><a href="#cb20-23" tabindex="-1"></a>  <span class="at">scale_color =</span> <span class="fu">scale_color_viridis</span>(<span class="at">limits =</span> common_range, <span class="at">oob =</span> scales<span class="sc">::</span>squish)</span>
+<span id="cb20-24"><a href="#cb20-24" tabindex="-1"></a>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">&quot;Model 2&quot;</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb20-25"><a href="#cb20-25" tabindex="-1"></a></span>
+<span id="cb20-26"><a href="#cb20-26" tabindex="-1"></a>shared_legend <span class="ot">&lt;-</span> cowplot<span class="sc">::</span><span class="fu">get_legend</span>(p2)</span>
+<span id="cb20-27"><a href="#cb20-27" tabindex="-1"></a></span>
+<span id="cb20-28"><a href="#cb20-28" tabindex="-1"></a><span class="fu">png</span>(<span class="st">&quot;Figures/model2_log_intensity_combined.png&quot;</span>, <span class="at">width =</span> <span class="dv">3300</span>, <span class="at">height =</span> <span class="dv">1500</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
+<span id="cb20-29"><a href="#cb20-29" tabindex="-1"></a>combined_plot <span class="ot">&lt;-</span> gridExtra<span class="sc">::</span><span class="fu">grid.arrange</span>(</span>
+<span id="cb20-30"><a href="#cb20-30" tabindex="-1"></a>  p1,</span>
+<span id="cb20-31"><a href="#cb20-31" tabindex="-1"></a>  p2 <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span>),</span>
+<span id="cb20-32"><a href="#cb20-32" tabindex="-1"></a>  shared_legend,</span>
+<span id="cb20-33"><a href="#cb20-33" tabindex="-1"></a>  <span class="at">widths =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">10</span>, <span class="dv">1</span>),</span>
+<span id="cb20-34"><a href="#cb20-34" tabindex="-1"></a>  <span class="at">layout_matrix =</span> <span class="fu">rbind</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>))</span>
+<span id="cb20-35"><a href="#cb20-35" tabindex="-1"></a>)</span>
+<span id="cb20-36"><a href="#cb20-36" tabindex="-1"></a>grid<span class="sc">::</span><span class="fu">grid.draw</span>(combined_plot)</span>
+<span id="cb20-37"><a href="#cb20-37" tabindex="-1"></a><span class="fu">dev.off</span>()</span></code></pre></div>
+<div id="estimated-log-intensity-for-model-1-left-and-model-2-right"
+class="section level3" number="12.1">
+<h3><span class="header-section-number">12.1</span> Estimated
+log-intensity for Model 1 (left) and Model 2 (right)</h3>
+<p><img src="Figures/New_5Graph_exact_vir__log_intensity_combined2.png" width="1650" style="display: block; margin: auto;" /></p>
+</div>
+<div id="posterior-mean-of-us-for-model-2" class="section level3"
+number="12.2">
+<h3><span class="header-section-number">12.2</span> Posterior mean of
+<span class="math inline">\(u(s)\)</span> for Model 2</h3>
+<p>The latent Gaussian field <span class="math inline">\(u(s)\)</span>
+captures spatial variation not explained by the covariates.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a><span class="fu">png</span>(<span class="st">&quot;Figures/model2_posterior_u.png&quot;</span>, <span class="at">height =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">700</span>, <span class="at">width =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">900</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>p3 <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(</span>
+<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a>  <span class="at">data =</span> <span class="st">&quot;.predicted_field&quot;</span>,</span>
+<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a>  <span class="at">newdata =</span> fit_model2<span class="sc">$</span>graph_fitted_data,</span>
+<span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a>  <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>,</span>
+<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a>  <span class="at">scale_color =</span> <span class="fu">scale_color_scico</span>(<span class="at">palette =</span> <span class="st">&quot;vikO&quot;</span>, <span class="at">midpoint =</span> <span class="dv">0</span>,</span>
+<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a>                                   <span class="at">limits =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">2</span>, <span class="dv">2</span>), <span class="at">oob =</span> scales<span class="sc">::</span>squish)</span>
+<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="fu">expression</span>(<span class="sc">~</span>u)) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a><span class="fu">print</span>(p3)</span>
+<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a><span class="fu">dev.off</span>()</span></code></pre></div>
+<p><img src="Figures/New_5Graph_model2_alpha1_7FRC_pruned_exact_50m_posterior_u_vikO.png" width="1350" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="session-info" class="section level2" number="13">
+<h2><span class="header-section-number">13</span> Session Info</h2>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<pre><code>## R version 4.5.1 (2025-06-13)
+## Platform: aarch64-apple-darwin20
+## Running under: macOS Sequoia 15.7.1
+## 
+## Matrix products: default
+## BLAS:   /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRblas.0.dylib 
+## LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+## 
+## locale:
+## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+## 
+## time zone: Asia/Riyadh
+## tzcode source: internal
+## 
+## attached base packages:
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+## [1] ggplot2_4.0.0          dplyr_1.1.4            sf_1.0-23             
+## [4] qs_0.27.3              INLA_25.10.19          Matrix_1.7-3          
+## [7] MetricGraph_1.5.0.9000
+## 
+## loaded via a namespace (and not attached):
+##  [1] gtable_0.3.6          xfun_0.54             bslib_0.9.0          
+##  [4] RApiSerialize_0.1.4   lattice_0.22-7        vctrs_0.6.5          
+##  [7] tools_4.5.1           generics_0.1.4        parallel_4.5.1       
+## [10] tibble_3.3.0          proxy_0.4-27          pkgconfig_2.0.3      
+## [13] KernSmooth_2.23-26    ggnewscale_0.5.2      RColorBrewer_1.1-3   
+## [16] S7_0.2.0              RcppParallel_5.1.11-1 lifecycle_1.0.4      
+## [19] compiler_4.5.1        farver_2.1.2          fmesher_0.5.0        
+## [22] MatrixModels_0.5-4    htmltools_0.5.8.1     class_7.3-23         
+## [25] sass_0.4.10           yaml_2.3.10           pillar_1.11.1        
+## [28] jquerylib_0.1.4       tidyr_1.3.1           classInt_0.4-11      
+## [31] cachem_1.1.0          wk_0.9.4              Deriv_4.2.0          
+## [34] tidyselect_1.2.1      digest_0.6.39         purrr_1.2.0          
+## [37] labeling_0.4.3        splines_4.5.1         fastmap_1.2.0        
+## [40] grid_4.5.1            cli_3.6.5             magrittr_2.0.4       
+## [43] broom_1.0.11          e1071_1.7-16          withr_3.0.2          
+## [46] scales_1.4.0          backports_1.5.0       sp_2.2-0             
+## [49] rmarkdown_2.30        igraph_2.2.1          RANN_2.6.2           
+## [52] zoo_1.8-14            png_0.1-8             stringfish_0.17.0    
+## [55] evaluate_1.0.5        knitr_1.50            s2_1.1.9             
+## [58] rlang_1.1.6           Rcpp_1.1.0            glue_1.8.0           
+## [61] DBI_1.2.3             rstudioapi_0.17.1     rSPDE_2.5.1.9000     
+## [64] jsonlite_2.0.0        R6_2.6.1              units_1.0-0</code></pre>
 </div>
 
 

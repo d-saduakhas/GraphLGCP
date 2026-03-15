@@ -13,7 +13,7 @@
 
 <title>Covariate Extraction</title>
 
-<script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
@@ -45,8 +45,8 @@
 <script src="site_libs/leaflet-binding-2.2.2/leaflet.js"></script>
 <script src="site_libs/leaflet-providers-2.0.0/leaflet-providers_2.0.0.js"></script>
 <script src="site_libs/leaflet-providers-plugin-2.2.2/leaflet-providers-plugin.js"></script>
-<link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -513,13 +513,12 @@ div.tocify {
 </div>
 
 
-<p>In this section, we will show how to extract the spatial covariates
-from the OpenStreetMap data. We will compute the distances to the
-nearest objects and apply transformations to them. We will use the
-Euclidean distance to the nearest mosque, school, bank, fuel station,
-and hospital. We will then apply different transformations to these
-distances, such as the inverse, inverse square root, logarithm, and
-exponential decay.</p>
+<p>In this section, we extract the locations of spatial covariates from
+OpenStreetMap data. We collect the positions of mosques, educational
+institutions, hospitals, financial institutions (banks and ATMs), and
+road intersections within the study area. The distance computations and
+transformations are covered in the next section (<a
+href="covariates2.html">Computing Spatial Covariates</a>).</p>
 <div id="extracting-the-spatial-covariates" class="section level1"
 number="1">
 <h1><span class="header-section-number">1</span> Extracting the Spatial
@@ -582,7 +581,7 @@ and intersections.</p>
 <div class="leaflet html-widget html-fill-item" id="htmlwidget-e4409849e39179307f2e" style="width:672px;height:480px;"></div>
 <script type="application/json" data-for="htmlwidget-e4409849e39179307f2e">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addProviderTiles","args":["CartoDB.Positron",null,null,{"errorTileUrl":"","noWrap":false,"detectRetina":false}]},{"method":"addPolygons","args":[[[[{"lng":[49.43056317178412,49.44080423210259,49.44743080054396,49.47212982837085,49.54381725060015,49.65044476097482,49.78598820636634,49.79140994418201,49.79261477480771,49.79080752886915,49.79080752886915,49.75586744072378,49.69984281662862,49.63176988627643,49.57454043155556,49.51791339214755,49.48719021119214,49.44020181678974,49.43056317178412],"lat":[25.42217110791317,25.49084645357821,25.53301552547779,25.56193146049465,25.56916044424887,25.57397976675168,25.50530442108663,25.49265369951676,25.39144792695775,25.3155435975385,25.28060350939313,25.27337452563891,25.2673503725104,25.2673503725104,25.26795278782325,25.27096486438751,25.30951944440999,25.37458029819792,25.42217110791317]}]]],null,null,{"interactive":true,"className":"","stroke":true,"color":"red","weight":2,"opacity":0.5,"fill":false,"fillColor":"red","fillOpacity":0.2,"smoothFactor":1,"noClip":false},null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[25.2673503725104,25.57397976675168],"lng":[49.43056317178412,49.79261477480771]}},"evals":[],"jsHooks":[]}</script>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Load graph</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>graph <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="fu">here</span>(<span class="st">&quot;Data/graph_mesh_pruned_100m_7FRC_ver2.qs&quot;</span>))</span></code></pre></div>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>graph <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="fu">here</span>(<span class="st">&quot;Data/graph_mesh_pruned_50m_7FRC.qs&quot;</span>))</span></code></pre></div>
 <div id="highways-and-intersections" class="section level2"
 number="1.1">
 <h2><span class="header-section-number">1.1</span> Highways and
@@ -603,10 +602,12 @@ Intersections</h2>
 <span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>  <span class="fu">select</span>(geometry, highway)</span>
 <span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="fu">table</span>(points_highway<span class="sc">$</span>highway)</span></code></pre></div>
 <pre><code>## 
-##          bus_stop          crossing motorway_junction      speed_camera 
-##                 1               162                10                10 
-##       street_lamp   traffic_signals    turning_circle      turning_loop 
-##                 4                47                 7                 1</code></pre>
+##          bus_stop          crossing          give_way motorway_junction 
+##                 1               207                 5                10 
+##      speed_camera              stop       street_lamp   traffic_signals 
+##                10                70                 4                85 
+##    turning_circle      turning_loop 
+##                 7                 1</code></pre>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">plot</span>(<span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
 <span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> points_highway, <span class="fu">aes</span>(<span class="at">color =</span> highway)) <span class="sc">+</span></span>
 <span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div>
@@ -620,24 +621,24 @@ Intersections</h2>
 <span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="fu">table</span>(lines_highway<span class="sc">$</span>highway)</span></code></pre></div>
 <pre><code>## 
 ##   construction         escape        footway  living_street       motorway 
-##             76              2            305            134              2 
+##             75              2            329            134              2 
 ##  motorway_link           path     pedestrian        primary   primary_link 
-##              9             18             34            162             62 
+##              9             18             34            170             81 
 ##       proposed    residential      secondary secondary_link        service 
-##              2          13688            537             72           3976 
+##              2          13742            566            104           4030 
 ##          steps       tertiary  tertiary_link          track          trunk 
-##              4            623             64            114            115 
+##              6            626             72            113            135 
 ##     trunk_link   unclassified 
-##             93           1645</code></pre>
+##            112           1622</code></pre>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>polygon_highway <span class="ot">&lt;-</span> data_highway<span class="sc">$</span>osm_polygons <span class="sc">%&gt;%</span></span>
 <span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(highway)) <span class="sc">%&gt;%</span></span>
 <span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="fu">select</span>(geometry, highway)</span>
 <span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="fu">table</span>(polygon_highway<span class="sc">$</span>highway)</span></code></pre></div>
 <pre><code>## 
 ##      footway         path   pedestrian      primary  residential    secondary 
-##            8            1            5           23          156           64 
+##            8            1            5           22          164           65 
 ##      service     tertiary        track        trunk unclassified 
-##           77           31            1            5           39</code></pre>
+##           79           23            1            5           39</code></pre>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">plot</span>(<span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
 <span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> polygon_highway, <span class="fu">aes</span>(<span class="at">color =</span> highway)) <span class="sc">+</span></span>
 <span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div>
@@ -657,248 +658,233 @@ and Buildings</h2>
 <span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>  <span class="fu">select</span>(geometry, leisure)</span>
 <span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a><span class="fu">table</span>(points_leisure<span class="sc">$</span>leisure)</span></code></pre></div>
 <pre><code>## 
-## fitness_centre           park   picnic_table          pitch     playground 
-##              1              2              3              3             34 
-##        stadium 
-##              1</code></pre>
+## amusement_arcade   fitness_centre     horse_riding             park 
+##                1                2                1                4 
+##     picnic_table            pitch       playground          stadium 
+##                3                3               35                1</code></pre>
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>polygon_leisure <span class="ot">&lt;-</span> data_leisure<span class="sc">$</span>osm_polygons <span class="sc">%&gt;%</span></span>
 <span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(leisure)) <span class="sc">%&gt;%</span></span>
 <span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>  <span class="fu">select</span>(geometry, leisure)</span>
 <span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a><span class="fu">table</span>(polygon_leisure<span class="sc">$</span>leisure)</span></code></pre></div>
 <pre><code>## 
-## fitness_centre         garden           park          pitch     playground 
-##              1              4             94            102              3 
-##  sports_centre        stadium  swimming_pool          track 
-##             13              5              2              2</code></pre>
+##        garden          park         pitch    playground sports_centre 
+##             4            96           108             3            13 
+##       stadium swimming_pool         track 
+##             5             2             2</code></pre>
 <div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="do">## AMENITY</span></span>
 <span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>tags_amenity <span class="ot">&lt;-</span> <span class="fu">available_tags</span>(<span class="st">&quot;amenity&quot;</span>)</span>
 <span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>data_amenity <span class="ot">&lt;-</span> <span class="fu">opq</span>(<span class="at">bb =</span> bb) <span class="sc">%&gt;%</span></span>
 <span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a>  <span class="fu">add_osm_feature</span>(<span class="at">key =</span> <span class="st">&quot;amenity&quot;</span>, <span class="at">value =</span> tags_amenity<span class="sc">$</span>Value) <span class="sc">%&gt;%</span></span>
-<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>  <span class="fu">osmdata_sf</span>()</span>
-<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a>points_amenity <span class="ot">&lt;-</span> data_amenity<span class="sc">$</span>osm_points <span class="sc">%&gt;%</span></span>
-<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(amenity)) <span class="sc">%&gt;%</span></span>
-<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a>  <span class="fu">select</span>(geometry, amenity)</span>
-<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a><span class="fu">table</span>(points_amenity<span class="sc">$</span>amenity)[<span class="fu">order</span>(<span class="fu">table</span>(points_amenity<span class="sc">$</span>amenity), <span class="at">decreasing =</span> <span class="cn">TRUE</span>)]</span></code></pre></div>
-<pre><code>## 
-## place_of_worship             bank       restaurant             fuel 
-##               81               61               50               36 
-##           school              atm            bench             cafe 
-##               28               17               17               12 
-##         hospital        fast_food          toilets         pharmacy 
-##               11                9                7                6 
-##          library           clinic          shelter         car_wash 
-##                5                4                4                3 
-##          college   drinking_water         fountain          parking 
-##                3                3                3                3 
-##           police community_centre      marketplace parking_entrance 
-##                3                2                2                2 
-##      post_office      bus_station       car_rental charging_station 
-##                2                1                1                1 
-##          dentist          doctors     fire_station        ice_cream 
-##                1                1                1                1 
-##     kindergarten           prison     waste_basket 
-##                1                1                1</code></pre>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="do">## BUILDING</span></span>
-<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>tags_building <span class="ot">&lt;-</span> <span class="fu">available_tags</span>(<span class="st">&quot;building&quot;</span>)</span>
-<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>data_building <span class="ot">&lt;-</span> <span class="fu">opq</span>(<span class="at">bb =</span> bb) <span class="sc">%&gt;%</span></span>
-<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a>  <span class="fu">add_osm_feature</span>(<span class="at">key =</span> <span class="st">&quot;building&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a>  <span class="fu">osmdata_sf</span>()</span>
-<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a></span>
-<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a>points_building <span class="ot">&lt;-</span> data_building<span class="sc">$</span>osm_points <span class="sc">%&gt;%</span></span>
-<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(building)) <span class="sc">%&gt;%</span></span>
-<span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a>  <span class="fu">select</span>(geometry, building)</span>
-<span id="cb19-10"><a href="#cb19-10" tabindex="-1"></a><span class="fu">table</span>(points_building<span class="sc">$</span>building)[<span class="fu">order</span>(<span class="fu">table</span>(points_building<span class="sc">$</span>building), <span class="at">decreasing =</span> <span class="cn">TRUE</span>)]</span></code></pre></div>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>  <span class="fu">osmdata_sf</span>()</span></code></pre></div>
+<pre><code>## Error in `httr2::req_perform()`:
+## ! HTTP 504 Gateway Timeout.</code></pre>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a>points_amenity <span class="ot">&lt;-</span> data_amenity<span class="sc">$</span>osm_points <span class="sc">%&gt;%</span></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(amenity)) <span class="sc">%&gt;%</span></span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>  <span class="fu">select</span>(geometry, amenity)</span></code></pre></div>
+<pre><code>## Error: object &#39;data_amenity&#39; not found</code></pre>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a><span class="fu">table</span>(points_amenity<span class="sc">$</span>amenity)[<span class="fu">order</span>(<span class="fu">table</span>(points_amenity<span class="sc">$</span>amenity), <span class="at">decreasing =</span> <span class="cn">TRUE</span>)]</span></code></pre></div>
+<pre><code>## Error: object &#39;points_amenity&#39; not found</code></pre>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a><span class="do">## BUILDING</span></span>
+<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a>tags_building <span class="ot">&lt;-</span> <span class="fu">available_tags</span>(<span class="st">&quot;building&quot;</span>)</span>
+<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a>data_building <span class="ot">&lt;-</span> <span class="fu">opq</span>(<span class="at">bb =</span> bb,<span class="at">timeout =</span> <span class="dv">300</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb23-4"><a href="#cb23-4" tabindex="-1"></a>  <span class="fu">add_osm_feature</span>(<span class="at">key =</span> <span class="st">&quot;building&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb23-5"><a href="#cb23-5" tabindex="-1"></a>  <span class="fu">osmdata_sf</span>()</span>
+<span id="cb23-6"><a href="#cb23-6" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" tabindex="-1"></a>points_building <span class="ot">&lt;-</span> data_building<span class="sc">$</span>osm_points <span class="sc">%&gt;%</span></span>
+<span id="cb23-8"><a href="#cb23-8" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(building)) <span class="sc">%&gt;%</span></span>
+<span id="cb23-9"><a href="#cb23-9" tabindex="-1"></a>  <span class="fu">select</span>(geometry, building)</span>
+<span id="cb23-10"><a href="#cb23-10" tabindex="-1"></a><span class="fu">table</span>(points_building<span class="sc">$</span>building)[<span class="fu">order</span>(<span class="fu">table</span>(points_building<span class="sc">$</span>building), <span class="at">decreasing =</span> <span class="cn">TRUE</span>)]</span></code></pre></div>
 <pre><code>## 
 ##     mosque     bunker        yes industrial     school 
-##          5          3          2          1          1</code></pre>
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a>polygon_building <span class="ot">&lt;-</span> data_building<span class="sc">$</span>osm_polygons <span class="sc">%&gt;%</span></span>
-<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(building)) <span class="sc">%&gt;%</span></span>
-<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a>  <span class="fu">select</span>(geometry, building)</span>
-<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a><span class="fu">table</span>(polygon_building<span class="sc">$</span>building)[<span class="fu">order</span>(<span class="fu">table</span>(polygon_building<span class="sc">$</span>building), <span class="at">decreasing =</span> <span class="cn">TRUE</span>)]</span></code></pre></div>
+##         16          3          2          1          1</code></pre>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a>polygon_building <span class="ot">&lt;-</span> data_building<span class="sc">$</span>osm_polygons <span class="sc">%&gt;%</span></span>
+<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(building)) <span class="sc">%&gt;%</span></span>
+<span id="cb25-3"><a href="#cb25-3" tabindex="-1"></a>  <span class="fu">select</span>(geometry, building)</span>
+<span id="cb25-4"><a href="#cb25-4" tabindex="-1"></a><span class="fu">table</span>(polygon_building<span class="sc">$</span>building)[<span class="fu">order</span>(<span class="fu">table</span>(polygon_building<span class="sc">$</span>building), <span class="at">decreasing =</span> <span class="cn">TRUE</span>)]</span></code></pre></div>
 <pre><code>## 
-##           yes         house       college          barn     dormitory 
-##          3865           183            37            25            16 
-##        school     warehouse          roof        mosque    university 
-##            16            15            11            10             9 
-##        retail    apartments      hospital    commercial       stadium 
-##             6             5             4             3             3 
-##       parking  construction     religious       service sports_centre 
-##             2             1             1             1             1 
-## train_station 
-##             1</code></pre>
+##            yes          house        college           barn      dormitory 
+##           3881            182             37             25             16 
+##         school      warehouse           roof         mosque         retail 
+##             16             15             13             12             12 
+##     university     apartments       hospital     commercial        stadium 
+##              9              5              4              3              3 
+##        parking   construction      religious        service  sports_centre 
+##              2              1              1              1              1 
+##  train_station transportation 
+##              1              1</code></pre>
 </div>
 <div id="main-functions" class="section level2" number="1.3">
 <h2><span class="header-section-number">1.3</span> Main Functions</h2>
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a><span class="do">######### EXTRACTING Specific Amenities #########</span></span>
-<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a>remove_duplicates_within_threshold <span class="ot">&lt;-</span> <span class="cf">function</span>(data, threshold) {</span>
-<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a>    <span class="co"># Convert the distance threshold to meters</span></span>
-<span id="cb23-4"><a href="#cb23-4" tabindex="-1"></a>    distance_threshold <span class="ot">&lt;-</span> units<span class="sc">::</span><span class="fu">set_units</span>(threshold, <span class="st">&quot;meters&quot;</span>)</span>
-<span id="cb23-5"><a href="#cb23-5" tabindex="-1"></a></span>
-<span id="cb23-6"><a href="#cb23-6" tabindex="-1"></a>    <span class="co"># Identify pairs of points that are within the distance threshold</span></span>
-<span id="cb23-7"><a href="#cb23-7" tabindex="-1"></a>    within_distance <span class="ot">&lt;-</span> <span class="fu">st_is_within_distance</span>(data, data, <span class="at">dist =</span> distance_threshold)</span>
-<span id="cb23-8"><a href="#cb23-8" tabindex="-1"></a>    keep <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">TRUE</span>, <span class="fu">length</span>(within_distance))</span>
-<span id="cb23-9"><a href="#cb23-9" tabindex="-1"></a></span>
-<span id="cb23-10"><a href="#cb23-10" tabindex="-1"></a>    <span class="co"># Loop through each point and mark duplicates for removal</span></span>
-<span id="cb23-11"><a href="#cb23-11" tabindex="-1"></a>    <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(within_distance)) {</span>
-<span id="cb23-12"><a href="#cb23-12" tabindex="-1"></a>      <span class="cf">if</span> (keep[i]) {</span>
-<span id="cb23-13"><a href="#cb23-13" tabindex="-1"></a>        duplicates <span class="ot">&lt;-</span> within_distance[[i]]</span>
-<span id="cb23-14"><a href="#cb23-14" tabindex="-1"></a>        <span class="co"># Mark all duplicates (excluding the current point) for removal</span></span>
-<span id="cb23-15"><a href="#cb23-15" tabindex="-1"></a>        <span class="cf">if</span> (<span class="fu">length</span>(duplicates) <span class="sc">&gt;</span> <span class="dv">1</span>) {</span>
-<span id="cb23-16"><a href="#cb23-16" tabindex="-1"></a>          keep[duplicates[<span class="sc">-</span><span class="dv">1</span>]] <span class="ot">&lt;-</span> <span class="cn">FALSE</span></span>
-<span id="cb23-17"><a href="#cb23-17" tabindex="-1"></a>        }</span>
-<span id="cb23-18"><a href="#cb23-18" tabindex="-1"></a>      }</span>
-<span id="cb23-19"><a href="#cb23-19" tabindex="-1"></a>    }</span>
-<span id="cb23-20"><a href="#cb23-20" tabindex="-1"></a>    unique_data <span class="ot">&lt;-</span> data[keep, ]</span>
-<span id="cb23-21"><a href="#cb23-21" tabindex="-1"></a>    <span class="fu">return</span>(unique_data)</span>
-<span id="cb23-22"><a href="#cb23-22" tabindex="-1"></a>  }</span>
-<span id="cb23-23"><a href="#cb23-23" tabindex="-1"></a></span>
-<span id="cb23-24"><a href="#cb23-24" tabindex="-1"></a></span>
-<span id="cb23-25"><a href="#cb23-25" tabindex="-1"></a><span class="co"># Fetch OSM data for both points and polygons</span></span>
-<span id="cb23-26"><a href="#cb23-26" tabindex="-1"></a>fetch_osm_data <span class="ot">&lt;-</span> <span class="cf">function</span>(key, value, bb) {</span>
-<span id="cb23-27"><a href="#cb23-27" tabindex="-1"></a>  <span class="co"># Fetch points data and check if it exists</span></span>
-<span id="cb23-28"><a href="#cb23-28" tabindex="-1"></a>  data_points <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>({</span>
-<span id="cb23-29"><a href="#cb23-29" tabindex="-1"></a>    <span class="fu">opq</span>(<span class="at">bb =</span> bb) <span class="sc">%&gt;%</span></span>
-<span id="cb23-30"><a href="#cb23-30" tabindex="-1"></a>      <span class="fu">add_osm_feature</span>(<span class="at">key =</span> key, <span class="at">value =</span> value) <span class="sc">%&gt;%</span></span>
-<span id="cb23-31"><a href="#cb23-31" tabindex="-1"></a>      <span class="fu">osmdata_sf</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb23-32"><a href="#cb23-32" tabindex="-1"></a>      .<span class="sc">$</span>osm_points <span class="sc">%&gt;%</span></span>
-<span id="cb23-33"><a href="#cb23-33" tabindex="-1"></a>      <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="sc">!!</span><span class="fu">sym</span>(key))) <span class="sc">%&gt;%</span></span>
-<span id="cb23-34"><a href="#cb23-34" tabindex="-1"></a>      <span class="fu">select</span>(geometry, <span class="sc">!!</span><span class="fu">sym</span>(key))</span>
-<span id="cb23-35"><a href="#cb23-35" tabindex="-1"></a>  }, <span class="at">error =</span> <span class="cf">function</span>(e) {</span>
-<span id="cb23-36"><a href="#cb23-36" tabindex="-1"></a>    <span class="cn">NULL</span>  <span class="co"># Return NULL if points data is not available</span></span>
-<span id="cb23-37"><a href="#cb23-37" tabindex="-1"></a>  })</span>
-<span id="cb23-38"><a href="#cb23-38" tabindex="-1"></a></span>
-<span id="cb23-39"><a href="#cb23-39" tabindex="-1"></a>  <span class="co"># Fetch polygons data and check if it exists</span></span>
-<span id="cb23-40"><a href="#cb23-40" tabindex="-1"></a>  data_polygons <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>({</span>
-<span id="cb23-41"><a href="#cb23-41" tabindex="-1"></a>    <span class="fu">opq</span>(<span class="at">bb =</span> bb) <span class="sc">%&gt;%</span></span>
-<span id="cb23-42"><a href="#cb23-42" tabindex="-1"></a>      <span class="fu">add_osm_feature</span>(<span class="at">key =</span> key, <span class="at">value =</span> value) <span class="sc">%&gt;%</span></span>
-<span id="cb23-43"><a href="#cb23-43" tabindex="-1"></a>      <span class="fu">osmdata_sf</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb23-44"><a href="#cb23-44" tabindex="-1"></a>      .<span class="sc">$</span>osm_polygons <span class="sc">%&gt;%</span></span>
-<span id="cb23-45"><a href="#cb23-45" tabindex="-1"></a>      <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(<span class="sc">!!</span><span class="fu">sym</span>(key))) <span class="sc">%&gt;%</span></span>
-<span id="cb23-46"><a href="#cb23-46" tabindex="-1"></a>      <span class="fu">select</span>(geometry, <span class="sc">!!</span><span class="fu">sym</span>(key))</span>
-<span id="cb23-47"><a href="#cb23-47" tabindex="-1"></a>  }, <span class="at">error =</span> <span class="cf">function</span>(e) {</span>
-<span id="cb23-48"><a href="#cb23-48" tabindex="-1"></a>    <span class="cn">NULL</span>  <span class="co"># Return NULL if polygons data is not available</span></span>
-<span id="cb23-49"><a href="#cb23-49" tabindex="-1"></a>  })</span>
-<span id="cb23-50"><a href="#cb23-50" tabindex="-1"></a></span>
-<span id="cb23-51"><a href="#cb23-51" tabindex="-1"></a>  <span class="co"># Check if both points and polygons data are available</span></span>
-<span id="cb23-52"><a href="#cb23-52" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(data_points) <span class="sc">&amp;&amp;</span> <span class="fu">is.null</span>(data_polygons)) {</span>
-<span id="cb23-53"><a href="#cb23-53" tabindex="-1"></a>    <span class="fu">return</span>(<span class="cn">NULL</span>)  <span class="co"># Skip if no data available</span></span>
-<span id="cb23-54"><a href="#cb23-54" tabindex="-1"></a>  }</span>
-<span id="cb23-55"><a href="#cb23-55" tabindex="-1"></a></span>
-<span id="cb23-56"><a href="#cb23-56" tabindex="-1"></a>  <span class="co"># Convert polygons to points (centroids) if polygons are available</span></span>
-<span id="cb23-57"><a href="#cb23-57" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(data_polygons) <span class="sc">&amp;&amp;</span> <span class="fu">nrow</span>(data_polygons) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
-<span id="cb23-58"><a href="#cb23-58" tabindex="-1"></a>    centroids_polygons <span class="ot">&lt;-</span> <span class="fu">st_centroid</span>(data_polygons) <span class="sc">%&gt;%</span></span>
-<span id="cb23-59"><a href="#cb23-59" tabindex="-1"></a>      <span class="fu">select</span>(geometry, <span class="sc">!!</span><span class="fu">sym</span>(key))</span>
-<span id="cb23-60"><a href="#cb23-60" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb23-61"><a href="#cb23-61" tabindex="-1"></a>    centroids_polygons <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb23-62"><a href="#cb23-62" tabindex="-1"></a>  }</span>
-<span id="cb23-63"><a href="#cb23-63" tabindex="-1"></a></span>
-<span id="cb23-64"><a href="#cb23-64" tabindex="-1"></a>  <span class="co"># Combine points and centroids if both are available</span></span>
-<span id="cb23-65"><a href="#cb23-65" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(data_points) <span class="sc">&amp;&amp;</span> <span class="fu">nrow</span>(data_points) <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">&amp;&amp;</span> <span class="sc">!</span><span class="fu">is.null</span>(centroids_polygons)) {</span>
-<span id="cb23-66"><a href="#cb23-66" tabindex="-1"></a>    combined <span class="ot">&lt;-</span> <span class="fu">rbind</span>(data_points, centroids_polygons)</span>
-<span id="cb23-67"><a href="#cb23-67" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(data_points) <span class="sc">&amp;&amp;</span> <span class="fu">nrow</span>(data_points) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
-<span id="cb23-68"><a href="#cb23-68" tabindex="-1"></a>    combined <span class="ot">&lt;-</span> data_points</span>
-<span id="cb23-69"><a href="#cb23-69" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb23-70"><a href="#cb23-70" tabindex="-1"></a>    combined <span class="ot">&lt;-</span> centroids_polygons</span>
-<span id="cb23-71"><a href="#cb23-71" tabindex="-1"></a>  }</span>
-<span id="cb23-72"><a href="#cb23-72" tabindex="-1"></a></span>
-<span id="cb23-73"><a href="#cb23-73" tabindex="-1"></a>  <span class="co"># Check that only the value of interest is present</span></span>
-<span id="cb23-74"><a href="#cb23-74" tabindex="-1"></a>  combined <span class="ot">&lt;-</span> combined <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="sc">!!</span><span class="fu">sym</span>(key) <span class="sc">==</span> value)</span>
-<span id="cb23-75"><a href="#cb23-75" tabindex="-1"></a></span>
-<span id="cb23-76"><a href="#cb23-76" tabindex="-1"></a>  unique_combined <span class="ot">=</span> <span class="fu">remove_duplicates_within_threshold</span>(combined, <span class="dv">100</span>)</span>
-<span id="cb23-77"><a href="#cb23-77" tabindex="-1"></a></span>
-<span id="cb23-78"><a href="#cb23-78" tabindex="-1"></a>  <span class="fu">return</span>(unique_combined)</span>
-<span id="cb23-79"><a href="#cb23-79" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a><span class="do">######### EXTRACTING Specific Amenities #########</span></span>
+<span id="cb27-2"><a href="#cb27-2" tabindex="-1"></a>remove_duplicates_within_threshold <span class="ot">&lt;-</span> <span class="cf">function</span>(data, threshold) {</span>
+<span id="cb27-3"><a href="#cb27-3" tabindex="-1"></a>    <span class="co"># Convert the distance threshold to meters</span></span>
+<span id="cb27-4"><a href="#cb27-4" tabindex="-1"></a>    distance_threshold <span class="ot">&lt;-</span> units<span class="sc">::</span><span class="fu">set_units</span>(threshold, <span class="st">&quot;meters&quot;</span>)</span>
+<span id="cb27-5"><a href="#cb27-5" tabindex="-1"></a></span>
+<span id="cb27-6"><a href="#cb27-6" tabindex="-1"></a>    <span class="co"># Identify pairs of points that are within the distance threshold</span></span>
+<span id="cb27-7"><a href="#cb27-7" tabindex="-1"></a>    within_distance <span class="ot">&lt;-</span> <span class="fu">st_is_within_distance</span>(data, data, <span class="at">dist =</span> distance_threshold)</span>
+<span id="cb27-8"><a href="#cb27-8" tabindex="-1"></a>    keep <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">TRUE</span>, <span class="fu">length</span>(within_distance))</span>
+<span id="cb27-9"><a href="#cb27-9" tabindex="-1"></a></span>
+<span id="cb27-10"><a href="#cb27-10" tabindex="-1"></a>    <span class="co"># Loop through each point and mark duplicates for removal</span></span>
+<span id="cb27-11"><a href="#cb27-11" tabindex="-1"></a>    <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(within_distance)) {</span>
+<span id="cb27-12"><a href="#cb27-12" tabindex="-1"></a>      <span class="cf">if</span> (keep[i]) {</span>
+<span id="cb27-13"><a href="#cb27-13" tabindex="-1"></a>        duplicates <span class="ot">&lt;-</span> within_distance[[i]]</span>
+<span id="cb27-14"><a href="#cb27-14" tabindex="-1"></a>        <span class="co"># Mark all duplicates (excluding the current point) for removal</span></span>
+<span id="cb27-15"><a href="#cb27-15" tabindex="-1"></a>        <span class="cf">if</span> (<span class="fu">length</span>(duplicates) <span class="sc">&gt;</span> <span class="dv">1</span>) {</span>
+<span id="cb27-16"><a href="#cb27-16" tabindex="-1"></a>          keep[duplicates[<span class="sc">-</span><span class="dv">1</span>]] <span class="ot">&lt;-</span> <span class="cn">FALSE</span></span>
+<span id="cb27-17"><a href="#cb27-17" tabindex="-1"></a>        }</span>
+<span id="cb27-18"><a href="#cb27-18" tabindex="-1"></a>      }</span>
+<span id="cb27-19"><a href="#cb27-19" tabindex="-1"></a>    }</span>
+<span id="cb27-20"><a href="#cb27-20" tabindex="-1"></a>    unique_data <span class="ot">&lt;-</span> data[keep, ]</span>
+<span id="cb27-21"><a href="#cb27-21" tabindex="-1"></a>    <span class="fu">return</span>(unique_data)</span>
+<span id="cb27-22"><a href="#cb27-22" tabindex="-1"></a>  }</span>
+<span id="cb27-23"><a href="#cb27-23" tabindex="-1"></a></span>
+<span id="cb27-24"><a href="#cb27-24" tabindex="-1"></a></span>
+<span id="cb27-25"><a href="#cb27-25" tabindex="-1"></a><span class="co"># Fetch OSM data for both points and polygons</span></span>
+<span id="cb27-26"><a href="#cb27-26" tabindex="-1"></a>fetch_osm_data <span class="ot">&lt;-</span> <span class="cf">function</span>(key, value, bb) {</span>
+<span id="cb27-27"><a href="#cb27-27" tabindex="-1"></a>  <span class="co"># Fetch points data and check if it exists</span></span>
+<span id="cb27-28"><a href="#cb27-28" tabindex="-1"></a>  data_points <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>({</span>
+<span id="cb27-29"><a href="#cb27-29" tabindex="-1"></a>    <span class="fu">opq</span>(<span class="at">bb =</span> bb,<span class="at">timeout =</span> <span class="dv">300</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb27-30"><a href="#cb27-30" tabindex="-1"></a>      <span class="fu">add_osm_feature</span>(<span class="at">key =</span> key, <span class="at">value =</span> value) <span class="sc">%&gt;%</span></span>
+<span id="cb27-31"><a href="#cb27-31" tabindex="-1"></a>      <span class="fu">osmdata_sf</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb27-32"><a href="#cb27-32" tabindex="-1"></a>      .<span class="sc">$</span>osm_points <span class="sc">%&gt;%</span></span>
+<span id="cb27-33"><a href="#cb27-33" tabindex="-1"></a>     <span class="co"># filter(!is.na(!!sym(key))) %&gt;%</span></span>
+<span id="cb27-34"><a href="#cb27-34" tabindex="-1"></a>      <span class="fu">select</span>(geometry, <span class="sc">!!</span><span class="fu">sym</span>(key))</span>
+<span id="cb27-35"><a href="#cb27-35" tabindex="-1"></a>  }, <span class="at">error =</span> <span class="cf">function</span>(e) {</span>
+<span id="cb27-36"><a href="#cb27-36" tabindex="-1"></a>    <span class="cn">NULL</span>  <span class="co"># Return NULL if points data is not available</span></span>
+<span id="cb27-37"><a href="#cb27-37" tabindex="-1"></a>  })</span>
+<span id="cb27-38"><a href="#cb27-38" tabindex="-1"></a></span>
+<span id="cb27-39"><a href="#cb27-39" tabindex="-1"></a>  <span class="co"># Fetch polygons data and check if it exists</span></span>
+<span id="cb27-40"><a href="#cb27-40" tabindex="-1"></a>  data_polygons <span class="ot">&lt;-</span> <span class="fu">tryCatch</span>({</span>
+<span id="cb27-41"><a href="#cb27-41" tabindex="-1"></a>    <span class="fu">opq</span>(<span class="at">bb =</span> bb, <span class="at">timeout =</span> <span class="dv">300</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb27-42"><a href="#cb27-42" tabindex="-1"></a>      <span class="fu">add_osm_feature</span>(<span class="at">key =</span> key, <span class="at">value =</span> value) <span class="sc">%&gt;%</span></span>
+<span id="cb27-43"><a href="#cb27-43" tabindex="-1"></a>      <span class="fu">osmdata_sf</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb27-44"><a href="#cb27-44" tabindex="-1"></a>      .<span class="sc">$</span>osm_polygons <span class="sc">%&gt;%</span></span>
+<span id="cb27-45"><a href="#cb27-45" tabindex="-1"></a>     <span class="co"># filter(!is.na(!!sym(key))) %&gt;%</span></span>
+<span id="cb27-46"><a href="#cb27-46" tabindex="-1"></a>      <span class="fu">select</span>(geometry, <span class="sc">!!</span><span class="fu">sym</span>(key))</span>
+<span id="cb27-47"><a href="#cb27-47" tabindex="-1"></a>  }, <span class="at">error =</span> <span class="cf">function</span>(e) {</span>
+<span id="cb27-48"><a href="#cb27-48" tabindex="-1"></a>    <span class="cn">NULL</span>  <span class="co"># Return NULL if polygons data is not available</span></span>
+<span id="cb27-49"><a href="#cb27-49" tabindex="-1"></a>  })</span>
+<span id="cb27-50"><a href="#cb27-50" tabindex="-1"></a></span>
+<span id="cb27-51"><a href="#cb27-51" tabindex="-1"></a>  <span class="co"># Check if both points and polygons data are available</span></span>
+<span id="cb27-52"><a href="#cb27-52" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(data_points) <span class="sc">&amp;&amp;</span> <span class="fu">is.null</span>(data_polygons)) {</span>
+<span id="cb27-53"><a href="#cb27-53" tabindex="-1"></a>    <span class="fu">return</span>(<span class="cn">NULL</span>)  <span class="co"># Skip if no data available</span></span>
+<span id="cb27-54"><a href="#cb27-54" tabindex="-1"></a>  }</span>
+<span id="cb27-55"><a href="#cb27-55" tabindex="-1"></a></span>
+<span id="cb27-56"><a href="#cb27-56" tabindex="-1"></a>  <span class="co"># Convert polygons to points (centroids) if polygons are available</span></span>
+<span id="cb27-57"><a href="#cb27-57" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(data_polygons) <span class="sc">&amp;&amp;</span> <span class="fu">nrow</span>(data_polygons) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb27-58"><a href="#cb27-58" tabindex="-1"></a>    centroids_polygons <span class="ot">&lt;-</span> <span class="fu">st_centroid</span>(data_polygons) <span class="sc">%&gt;%</span></span>
+<span id="cb27-59"><a href="#cb27-59" tabindex="-1"></a>      <span class="fu">select</span>(geometry, <span class="sc">!!</span><span class="fu">sym</span>(key))</span>
+<span id="cb27-60"><a href="#cb27-60" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb27-61"><a href="#cb27-61" tabindex="-1"></a>    centroids_polygons <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb27-62"><a href="#cb27-62" tabindex="-1"></a>  }</span>
+<span id="cb27-63"><a href="#cb27-63" tabindex="-1"></a></span>
+<span id="cb27-64"><a href="#cb27-64" tabindex="-1"></a>  <span class="co"># Combine points and centroids if both are available</span></span>
+<span id="cb27-65"><a href="#cb27-65" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(data_points) <span class="sc">&amp;&amp;</span> <span class="fu">nrow</span>(data_points) <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">&amp;&amp;</span> <span class="sc">!</span><span class="fu">is.null</span>(centroids_polygons)) {</span>
+<span id="cb27-66"><a href="#cb27-66" tabindex="-1"></a>    combined <span class="ot">&lt;-</span> <span class="fu">rbind</span>(data_points, centroids_polygons)</span>
+<span id="cb27-67"><a href="#cb27-67" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(data_points) <span class="sc">&amp;&amp;</span> <span class="fu">nrow</span>(data_points) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb27-68"><a href="#cb27-68" tabindex="-1"></a>    combined <span class="ot">&lt;-</span> data_points</span>
+<span id="cb27-69"><a href="#cb27-69" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb27-70"><a href="#cb27-70" tabindex="-1"></a>    combined <span class="ot">&lt;-</span> centroids_polygons</span>
+<span id="cb27-71"><a href="#cb27-71" tabindex="-1"></a>  }</span>
+<span id="cb27-72"><a href="#cb27-72" tabindex="-1"></a></span>
+<span id="cb27-73"><a href="#cb27-73" tabindex="-1"></a>  <span class="co"># Check that only the value of interest is present</span></span>
+<span id="cb27-74"><a href="#cb27-74" tabindex="-1"></a> <span class="co"># combined &lt;- combined %&gt;% filter(!!sym(key) == value)</span></span>
+<span id="cb27-75"><a href="#cb27-75" tabindex="-1"></a>  combined <span class="ot">&lt;-</span> combined <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="sc">!!</span><span class="fu">sym</span>(key) <span class="sc">==</span> value <span class="sc">|</span> <span class="fu">is.na</span>(<span class="sc">!!</span><span class="fu">sym</span>(key)))</span>
+<span id="cb27-76"><a href="#cb27-76" tabindex="-1"></a>  unique_combined <span class="ot">=</span> <span class="fu">remove_duplicates_within_threshold</span>(combined, <span class="dv">100</span>)</span>
+<span id="cb27-77"><a href="#cb27-77" tabindex="-1"></a></span>
+<span id="cb27-78"><a href="#cb27-78" tabindex="-1"></a>  <span class="fu">return</span>(unique_combined)</span>
+<span id="cb27-79"><a href="#cb27-79" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <div id="extracting-the-amenities" class="section level2" number="1.4">
 <h2><span class="header-section-number">1.4</span> Extracting the
 Amenities</h2>
-<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a><span class="co"># MOSQUES  </span></span>
-<span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a>mosques <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;place_of_worship&quot;</span>, bb)</span>
-<span id="cb24-3"><a href="#cb24-3" tabindex="-1"></a>mosques2 <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;building&quot;</span>, <span class="st">&quot;mosque&quot;</span>, bb)</span>
-<span id="cb24-4"><a href="#cb24-4" tabindex="-1"></a></span>
-<span id="cb24-5"><a href="#cb24-5" tabindex="-1"></a>mosques2 <span class="ot">=</span> mosques2 <span class="sc">%&gt;%</span> <span class="fu">rename</span>(<span class="at">amenity =</span> building)</span>
-<span id="cb24-6"><a href="#cb24-6" tabindex="-1"></a>mosques <span class="ot">=</span> <span class="fu">rbind</span>(mosques, mosques2)</span>
-<span id="cb24-7"><a href="#cb24-7" tabindex="-1"></a>mosques<span class="sc">$</span>amenity <span class="ot">=</span> <span class="st">&quot;mosque&quot;</span></span>
-<span id="cb24-8"><a href="#cb24-8" tabindex="-1"></a>mosques <span class="ot">=</span> <span class="fu">remove_duplicates_within_threshold</span>(mosques, <span class="dv">200</span>)</span>
-<span id="cb24-9"><a href="#cb24-9" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;The number of unique mosques is&quot;</span>, <span class="fu">nrow</span>(mosques), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>## The number of unique mosques is 108</code></pre>
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">plot</span>(<span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
-<span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">data =</span> mosques, <span class="fu">aes</span>(<span class="at">color =</span> amenity)) <span class="sc">+</span></span>
-<span id="cb26-3"><a href="#cb26-3" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" tabindex="-1"></a><span class="co"># MOSQUES  </span></span>
+<span id="cb28-2"><a href="#cb28-2" tabindex="-1"></a>mosques <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;place_of_worship&quot;</span>, bb)</span>
+<span id="cb28-3"><a href="#cb28-3" tabindex="-1"></a>mosques2 <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;building&quot;</span>, <span class="st">&quot;mosque&quot;</span>, bb)</span>
+<span id="cb28-4"><a href="#cb28-4" tabindex="-1"></a></span>
+<span id="cb28-5"><a href="#cb28-5" tabindex="-1"></a>mosques2 <span class="ot">=</span> mosques2 <span class="sc">%&gt;%</span> <span class="fu">rename</span>(<span class="at">amenity =</span> building)</span>
+<span id="cb28-6"><a href="#cb28-6" tabindex="-1"></a>mosques <span class="ot">=</span> <span class="fu">rbind</span>(mosques, mosques2)</span>
+<span id="cb28-7"><a href="#cb28-7" tabindex="-1"></a>mosques<span class="sc">$</span>amenity <span class="ot">=</span> <span class="st">&quot;mosque&quot;</span></span>
+<span id="cb28-8"><a href="#cb28-8" tabindex="-1"></a>mosques <span class="ot">=</span> <span class="fu">remove_duplicates_within_threshold</span>(mosques, <span class="dv">200</span>)</span>
+<span id="cb28-9"><a href="#cb28-9" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;The number of unique mosques is&quot;</span>, <span class="fu">nrow</span>(mosques), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>## The number of unique mosques is 116</code></pre>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">plot</span>(<span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb30-2"><a href="#cb30-2" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">data =</span> mosques, <span class="fu">aes</span>(<span class="at">color =</span> amenity)) <span class="sc">+</span></span>
+<span id="cb30-3"><a href="#cb30-3" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span></code></pre></div>
 <p><img src="covariates_files/figure-html/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a><span class="co"># EDUCATION</span></span>
-<span id="cb27-2"><a href="#cb27-2" tabindex="-1"></a>college <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;college&quot;</span>, bb)</span>
-<span id="cb27-3"><a href="#cb27-3" tabindex="-1"></a>college2 <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;building&quot;</span>, <span class="st">&quot;college&quot;</span>, bb)</span>
-<span id="cb27-4"><a href="#cb27-4" tabindex="-1"></a>school <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;school&quot;</span>, bb)</span>
-<span id="cb27-5"><a href="#cb27-5" tabindex="-1"></a>school2 <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;building&quot;</span>, <span class="st">&quot;school&quot;</span>, bb)</span>
-<span id="cb27-6"><a href="#cb27-6" tabindex="-1"></a>kindergarten <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;kindergarten&quot;</span>, bb)</span>
-<span id="cb27-7"><a href="#cb27-7" tabindex="-1"></a>library <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;library&quot;</span>, bb)</span>
-<span id="cb27-8"><a href="#cb27-8" tabindex="-1"></a>university <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;university&quot;</span>, bb)</span>
-<span id="cb27-9"><a href="#cb27-9" tabindex="-1"></a>university2 <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;building&quot;</span>, <span class="st">&quot;university&quot;</span>, bb)</span>
-<span id="cb27-10"><a href="#cb27-10" tabindex="-1"></a></span>
-<span id="cb27-11"><a href="#cb27-11" tabindex="-1"></a><span class="co"># Merge all the education data and check the number of unique points</span></span>
-<span id="cb27-12"><a href="#cb27-12" tabindex="-1"></a>education <span class="ot">=</span> <span class="fu">rbind</span>(college, school, kindergarten, library, university)</span>
-<span id="cb27-13"><a href="#cb27-13" tabindex="-1"></a>education2 <span class="ot">=</span> <span class="fu">rbind</span>(college2, school2, university2)<span class="sc">%&gt;%</span> <span class="fu">rename</span>(<span class="at">amenity =</span> building)</span>
-<span id="cb27-14"><a href="#cb27-14" tabindex="-1"></a>education <span class="ot">=</span> <span class="fu">rbind</span>(education, education2)</span>
-<span id="cb27-15"><a href="#cb27-15" tabindex="-1"></a>education<span class="sc">$</span>amenity <span class="ot">=</span> <span class="st">&quot;education&quot;</span></span>
-<span id="cb27-16"><a href="#cb27-16" tabindex="-1"></a>education_places <span class="ot">=</span> <span class="fu">remove_duplicates_within_threshold</span>(education, <span class="dv">200</span>)</span>
-<span id="cb27-17"><a href="#cb27-17" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;The number of unique education points is&quot;</span>, <span class="fu">nrow</span>(education_places), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>## The number of unique education points is 73</code></pre>
-<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">plot</span>(<span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
-<span id="cb29-2"><a href="#cb29-2" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">data =</span> education_places, <span class="fu">aes</span>(<span class="at">color =</span> amenity)) <span class="sc">+</span></span>
-<span id="cb29-3"><a href="#cb29-3" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" tabindex="-1"></a><span class="co"># EDUCATION</span></span>
+<span id="cb31-2"><a href="#cb31-2" tabindex="-1"></a>college <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;college&quot;</span>, bb)</span>
+<span id="cb31-3"><a href="#cb31-3" tabindex="-1"></a>college2 <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;building&quot;</span>, <span class="st">&quot;college&quot;</span>, bb)</span>
+<span id="cb31-4"><a href="#cb31-4" tabindex="-1"></a>school <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;school&quot;</span>, bb)</span>
+<span id="cb31-5"><a href="#cb31-5" tabindex="-1"></a>school2 <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;building&quot;</span>, <span class="st">&quot;school&quot;</span>, bb)</span>
+<span id="cb31-6"><a href="#cb31-6" tabindex="-1"></a>kindergarten <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;kindergarten&quot;</span>, bb)</span>
+<span id="cb31-7"><a href="#cb31-7" tabindex="-1"></a>library <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;library&quot;</span>, bb)</span>
+<span id="cb31-8"><a href="#cb31-8" tabindex="-1"></a>university <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;university&quot;</span>, bb)</span>
+<span id="cb31-9"><a href="#cb31-9" tabindex="-1"></a>university2 <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;building&quot;</span>, <span class="st">&quot;university&quot;</span>, bb)</span>
+<span id="cb31-10"><a href="#cb31-10" tabindex="-1"></a></span>
+<span id="cb31-11"><a href="#cb31-11" tabindex="-1"></a><span class="co"># Merge all the education data and check the number of unique points</span></span>
+<span id="cb31-12"><a href="#cb31-12" tabindex="-1"></a>education <span class="ot">=</span> <span class="fu">rbind</span>(college, school, kindergarten, library, university)</span>
+<span id="cb31-13"><a href="#cb31-13" tabindex="-1"></a>education2 <span class="ot">=</span> <span class="fu">rbind</span>(college2, school2, university2)<span class="sc">%&gt;%</span> <span class="fu">rename</span>(<span class="at">amenity =</span> building)</span>
+<span id="cb31-14"><a href="#cb31-14" tabindex="-1"></a>education <span class="ot">=</span> <span class="fu">rbind</span>(education, education2)</span>
+<span id="cb31-15"><a href="#cb31-15" tabindex="-1"></a>education<span class="sc">$</span>amenity <span class="ot">=</span> <span class="st">&quot;education&quot;</span></span>
+<span id="cb31-16"><a href="#cb31-16" tabindex="-1"></a>education_places <span class="ot">=</span> <span class="fu">remove_duplicates_within_threshold</span>(education, <span class="dv">300</span>)</span>
+<span id="cb31-17"><a href="#cb31-17" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;The number of unique education points is&quot;</span>, <span class="fu">nrow</span>(education_places), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>## The number of unique education points is 74</code></pre>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">plot</span>(<span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb33-2"><a href="#cb33-2" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">data =</span> education_places, <span class="fu">aes</span>(<span class="at">color =</span> amenity)) <span class="sc">+</span></span>
+<span id="cb33-3"><a href="#cb33-3" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span></code></pre></div>
 <p><img src="covariates_files/figure-html/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
-<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" tabindex="-1"></a><span class="co"># HEALTH</span></span>
-<span id="cb30-2"><a href="#cb30-2" tabindex="-1"></a>hospital <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;hospital&quot;</span>, bb)</span>
-<span id="cb30-3"><a href="#cb30-3" tabindex="-1"></a>hospital2 <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;building&quot;</span>, <span class="st">&quot;hospital&quot;</span>, bb)</span>
-<span id="cb30-4"><a href="#cb30-4" tabindex="-1"></a>clinic <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;clinic&quot;</span>, bb)</span>
-<span id="cb30-5"><a href="#cb30-5" tabindex="-1"></a>dentist <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;dentist&quot;</span>, bb)</span>
-<span id="cb30-6"><a href="#cb30-6" tabindex="-1"></a>doctors <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;doctors&quot;</span>, bb)</span>
-<span id="cb30-7"><a href="#cb30-7" tabindex="-1"></a>pharmacy <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;pharmacy&quot;</span>, bb)</span>
-<span id="cb30-8"><a href="#cb30-8" tabindex="-1"></a></span>
-<span id="cb30-9"><a href="#cb30-9" tabindex="-1"></a>hospitals <span class="ot">=</span> <span class="fu">rbind</span>(hospital, clinic, dentist, doctors, pharmacy)</span>
-<span id="cb30-10"><a href="#cb30-10" tabindex="-1"></a>hospitals2 <span class="ot">=</span> hospital2 <span class="sc">%&gt;%</span> <span class="fu">rename</span>(<span class="at">amenity =</span> building)</span>
-<span id="cb30-11"><a href="#cb30-11" tabindex="-1"></a>hospitals<span class="ot">=</span> <span class="fu">rbind</span>(hospitals, hospitals2)</span>
-<span id="cb30-12"><a href="#cb30-12" tabindex="-1"></a>hospitals<span class="sc">$</span>amenity <span class="ot">=</span> <span class="st">&quot;hospital&quot;</span></span>
-<span id="cb30-13"><a href="#cb30-13" tabindex="-1"></a>hospital_places <span class="ot">=</span> <span class="fu">remove_duplicates_within_threshold</span>(hospitals, <span class="dv">200</span>)</span>
-<span id="cb30-14"><a href="#cb30-14" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;The number of unique hospital points is&quot;</span>, <span class="fu">nrow</span>(hospitals), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>## The number of unique hospital points is 39</code></pre>
-<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">plot</span>(<span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
-<span id="cb32-2"><a href="#cb32-2" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">data =</span> hospital_places, <span class="fu">aes</span>(<span class="at">color =</span> amenity)) <span class="sc">+</span></span>
-<span id="cb32-3"><a href="#cb32-3" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a><span class="co"># HEALTH</span></span>
+<span id="cb34-2"><a href="#cb34-2" tabindex="-1"></a>hospital <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;hospital&quot;</span>, bb)</span>
+<span id="cb34-3"><a href="#cb34-3" tabindex="-1"></a>hospital2 <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;building&quot;</span>, <span class="st">&quot;hospital&quot;</span>, bb)</span>
+<span id="cb34-4"><a href="#cb34-4" tabindex="-1"></a>clinic <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;clinic&quot;</span>, bb)</span>
+<span id="cb34-5"><a href="#cb34-5" tabindex="-1"></a>dentist <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;dentist&quot;</span>, bb)</span>
+<span id="cb34-6"><a href="#cb34-6" tabindex="-1"></a>doctors <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;doctors&quot;</span>, bb)</span>
+<span id="cb34-7"><a href="#cb34-7" tabindex="-1"></a>pharmacy <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;pharmacy&quot;</span>, bb)</span>
+<span id="cb34-8"><a href="#cb34-8" tabindex="-1"></a></span>
+<span id="cb34-9"><a href="#cb34-9" tabindex="-1"></a>hospitals <span class="ot">=</span> <span class="fu">rbind</span>(hospital, clinic, dentist, doctors, pharmacy)</span>
+<span id="cb34-10"><a href="#cb34-10" tabindex="-1"></a>hospitals2 <span class="ot">=</span> hospital2 <span class="sc">%&gt;%</span> <span class="fu">rename</span>(<span class="at">amenity =</span> building)</span>
+<span id="cb34-11"><a href="#cb34-11" tabindex="-1"></a>hospitals<span class="ot">=</span> <span class="fu">rbind</span>(hospitals, hospitals2)</span>
+<span id="cb34-12"><a href="#cb34-12" tabindex="-1"></a>hospitals<span class="sc">$</span>amenity <span class="ot">=</span> <span class="st">&quot;hospital&quot;</span></span>
+<span id="cb34-13"><a href="#cb34-13" tabindex="-1"></a>hospital_places <span class="ot">=</span> <span class="fu">remove_duplicates_within_threshold</span>(hospitals, <span class="dv">200</span>)</span>
+<span id="cb34-14"><a href="#cb34-14" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;The number of unique hospital points is&quot;</span>, <span class="fu">nrow</span>(hospitals), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>## The number of unique hospital points is 87</code></pre>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">plot</span>(<span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb36-2"><a href="#cb36-2" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">data =</span> hospital_places, <span class="fu">aes</span>(<span class="at">color =</span> amenity)) <span class="sc">+</span></span>
+<span id="cb36-3"><a href="#cb36-3" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span></code></pre></div>
 <p><img src="covariates_files/figure-html/unnamed-chunk-6-3.png" width="672" style="display: block; margin: auto;" /></p>
-<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" tabindex="-1"></a><span class="co"># FINANCE</span></span>
-<span id="cb33-2"><a href="#cb33-2" tabindex="-1"></a>bank <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;bank&quot;</span>, bb)</span>
-<span id="cb33-3"><a href="#cb33-3" tabindex="-1"></a>atm <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;atm&quot;</span>, bb)</span>
-<span id="cb33-4"><a href="#cb33-4" tabindex="-1"></a></span>
-<span id="cb33-5"><a href="#cb33-5" tabindex="-1"></a>finance <span class="ot">=</span> <span class="fu">rbind</span>(bank, atm)</span>
-<span id="cb33-6"><a href="#cb33-6" tabindex="-1"></a>finance<span class="sc">$</span>amenity <span class="ot">=</span> <span class="st">&quot;finance&quot;</span></span>
-<span id="cb33-7"><a href="#cb33-7" tabindex="-1"></a>finance_places <span class="ot">=</span> <span class="fu">remove_duplicates_within_threshold</span>(finance, <span class="dv">200</span>)</span>
-<span id="cb33-8"><a href="#cb33-8" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;The number of unique finance points is&quot;</span>, <span class="fu">nrow</span>(finance_places), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
-<pre><code>## The number of unique finance points is 65</code></pre>
-<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">plot</span>(<span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
-<span id="cb35-2"><a href="#cb35-2" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">data =</span> finance_places, <span class="fu">aes</span>(<span class="at">color =</span> amenity)) <span class="sc">+</span></span>
-<span id="cb35-3"><a href="#cb35-3" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a><span class="co"># FINANCE</span></span>
+<span id="cb37-2"><a href="#cb37-2" tabindex="-1"></a>bank <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;bank&quot;</span>, bb)</span>
+<span id="cb37-3"><a href="#cb37-3" tabindex="-1"></a>atm <span class="ot">=</span> <span class="fu">fetch_osm_data</span>(<span class="st">&quot;amenity&quot;</span>, <span class="st">&quot;atm&quot;</span>, bb)</span>
+<span id="cb37-4"><a href="#cb37-4" tabindex="-1"></a></span>
+<span id="cb37-5"><a href="#cb37-5" tabindex="-1"></a>finance <span class="ot">=</span> <span class="fu">rbind</span>(bank, atm)</span>
+<span id="cb37-6"><a href="#cb37-6" tabindex="-1"></a>finance<span class="sc">$</span>amenity <span class="ot">=</span> <span class="st">&quot;finance&quot;</span></span>
+<span id="cb37-7"><a href="#cb37-7" tabindex="-1"></a>finance_places <span class="ot">=</span> <span class="fu">remove_duplicates_within_threshold</span>(finance, <span class="dv">200</span>)</span>
+<span id="cb37-8"><a href="#cb37-8" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;The number of unique finance points is&quot;</span>, <span class="fu">nrow</span>(finance_places), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div>
+<pre><code>## The number of unique finance points is 69</code></pre>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">plot</span>(<span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb39-2"><a href="#cb39-2" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">data =</span> finance_places, <span class="fu">aes</span>(<span class="at">color =</span> amenity)) <span class="sc">+</span></span>
+<span id="cb39-3"><a href="#cb39-3" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span></code></pre></div>
 <p><img src="covariates_files/figure-html/unnamed-chunk-6-4.png" width="672" style="display: block; margin: auto;" /></p>
-<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" tabindex="-1"></a><span class="co"># JUNCTIONS</span></span>
-<span id="cb36-2"><a href="#cb36-2" tabindex="-1"></a>intersection <span class="ot">=</span> <span class="fu">remove_duplicates_within_threshold</span>(points_highway, <span class="dv">300</span>)</span>
-<span id="cb36-3"><a href="#cb36-3" tabindex="-1"></a><span class="co"># rename the column </span></span>
-<span id="cb36-4"><a href="#cb36-4" tabindex="-1"></a>intersection <span class="ot">=</span> intersection <span class="sc">%&gt;%</span> <span class="fu">rename</span>(<span class="at">amenity =</span> highway)</span>
-<span id="cb36-5"><a href="#cb36-5" tabindex="-1"></a>intersection<span class="sc">$</span>amenity <span class="ot">=</span> <span class="st">&quot;intersection&quot;</span></span>
-<span id="cb36-6"><a href="#cb36-6" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">plot</span>(<span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
-<span id="cb36-7"><a href="#cb36-7" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> intersection, <span class="fu">aes</span>(<span class="at">color =</span> amenity)) <span class="sc">+</span></span>
-<span id="cb36-8"><a href="#cb36-8" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" tabindex="-1"></a><span class="co"># JUNCTIONS</span></span>
+<span id="cb40-2"><a href="#cb40-2" tabindex="-1"></a>intersection <span class="ot">=</span> <span class="fu">remove_duplicates_within_threshold</span>(points_highway, <span class="dv">300</span>)</span>
+<span id="cb40-3"><a href="#cb40-3" tabindex="-1"></a><span class="co"># rename the column </span></span>
+<span id="cb40-4"><a href="#cb40-4" tabindex="-1"></a>intersection <span class="ot">=</span> intersection <span class="sc">%&gt;%</span> <span class="fu">rename</span>(<span class="at">amenity =</span> highway)</span>
+<span id="cb40-5"><a href="#cb40-5" tabindex="-1"></a>intersection<span class="sc">$</span>amenity <span class="ot">=</span> <span class="st">&quot;intersection&quot;</span></span>
+<span id="cb40-6"><a href="#cb40-6" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">plot</span>(<span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb40-7"><a href="#cb40-7" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> intersection, <span class="fu">aes</span>(<span class="at">color =</span> amenity)) <span class="sc">+</span></span>
+<span id="cb40-8"><a href="#cb40-8" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div>
 <p><img src="covariates_files/figure-html/unnamed-chunk-6-5.png" width="672" style="display: block; margin: auto;" /></p>
-<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a><span class="do">## Save all amenities data</span></span>
-<span id="cb37-2"><a href="#cb37-2" tabindex="-1"></a><span class="fu">save</span>(mosques, education_places, hospital_places, finance_places, intersection, <span class="at">file =</span> <span class="st">&quot;Data/additional_city_objects.RData&quot;</span>)</span></code></pre></div>
-<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" tabindex="-1"></a><span class="co"># Plot all amenities</span></span>
-<span id="cb38-2"><a href="#cb38-2" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">plot</span>(<span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
-<span id="cb38-3"><a href="#cb38-3" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> mosques, <span class="fu">aes</span>(<span class="at">color =</span> amenity), <span class="at">size =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb38-4"><a href="#cb38-4" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> education_places, <span class="fu">aes</span>(<span class="at">color =</span> amenity), <span class="at">size =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb38-5"><a href="#cb38-5" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> hospital_places, <span class="fu">aes</span>(<span class="at">color =</span> amenity), <span class="at">size =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb38-6"><a href="#cb38-6" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> finance_places, <span class="fu">aes</span>(<span class="at">color =</span> amenity), <span class="at">size =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb38-7"><a href="#cb38-7" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> intersection, <span class="fu">aes</span>(<span class="at">color =</span> amenity), <span class="at">size =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb38-8"><a href="#cb38-8" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" tabindex="-1"></a><span class="do">## Save all amenities data</span></span>
+<span id="cb41-2"><a href="#cb41-2" tabindex="-1"></a><span class="fu">save</span>(mosques, education_places, hospital_places, finance_places, intersection, <span class="at">file =</span> <span class="st">&quot;Data/additional_city_objects.RData&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" tabindex="-1"></a><span class="co"># Plot all amenities</span></span>
+<span id="cb42-2"><a href="#cb42-2" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">plot</span>(<span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb42-3"><a href="#cb42-3" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> mosques, <span class="fu">aes</span>(<span class="at">color =</span> amenity), <span class="at">size =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb42-4"><a href="#cb42-4" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> education_places, <span class="fu">aes</span>(<span class="at">color =</span> amenity), <span class="at">size =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb42-5"><a href="#cb42-5" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> hospital_places, <span class="fu">aes</span>(<span class="at">color =</span> amenity), <span class="at">size =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb42-6"><a href="#cb42-6" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> finance_places, <span class="fu">aes</span>(<span class="at">color =</span> amenity), <span class="at">size =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb42-7"><a href="#cb42-7" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> intersection, <span class="fu">aes</span>(<span class="at">color =</span> amenity), <span class="at">size =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb42-8"><a href="#cb42-8" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div>
 <p><img src="covariates_files/figure-html/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 </div>

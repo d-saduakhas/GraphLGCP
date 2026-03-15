@@ -95,7 +95,7 @@ library(here)
 
 # Load data
 df <- qread("Data/data_all_reasons_full_FRC7.qs")
-graph <- qread("Data/graph_mesh_pruned_100m_7FRC_ver2.qs") 
+graph <- qread("Data/graph_mesh_pruned_50m_7FRC.qs") 
 load("Data/additional_city_objects.RData")
 
 ```
@@ -155,12 +155,6 @@ for(i in amenities){
   df[[paste0("exp_decay_distance_to_", i)]] <- transform_distances(df[[paste0("distance_to_", i)]], method = "exp_decay")
   df[[paste0("exp_decay_double_distance_to_", i)]] <- transform_distances(df[[paste0("distance_to_", i)]], method = "exp_decay_double")
 }
-```
-
-
-```{r}
-knitr::include_graphics("Figures/3Covariates_all_transformations_hist_distance_to_mosque.png")
-
 ```
 
 Here is the code used to generate the plots:
@@ -260,7 +254,7 @@ mesh_locations_sf$.edge_number = mesh_PtE[,1]
 mesh_locations_sf$.distance_on_edge = mesh_PtE[,2]
 
 # Save the updated mesh locations with distances
-qsave(mesh_locations_sf, "Data/mesh_locations_pruned_100m_with_distances_7FRC_ver2.qs")
+qsave(mesh_locations_sf, "Data/mesh_locations_pruned_50m_with_distances_7FRC.qs")
 ```
 
 Here is the code used to generate the plots:
@@ -323,5 +317,83 @@ ggplot(mesh_locations_sf)+
 dev.off()
 ```
 
+```{r, echo=FALSE, fig.show='hold', out.width="90%", eval=TRUE}
+knitr::include_graphics(("Figures/3Covariates_exp_decay_distance_to_mosque_mesh_7FRC.png"))
+knitr::include_graphics(("Figures/3Covariates_exp_decay_distance_to_education_mesh_7FRC.png"))
+```
 
+After exploring several transformations, we chose the **log transformation** for the final model (Model 2), as it accounts for the diminishing influence of more distant features while maintaining interpretable coefficients. The log-transformed distances to hospitals and financial institutions at mesh locations are shown below.
+
+```{r, echo=FALSE, fig.show='hold', out.width="90%", eval=TRUE}
+knitr::include_graphics("Figures/3Covariates_log_distance_to_hospital_mesh_7FRC.png")
+knitr::include_graphics("Figures/3Covariates_log_distance_to_finance_mesh_7FRC.png")
+```
+
+```{r}
+# plot log distances
+# Log distance to mosque
+png("Figures/3Covariates_log_distance_to_mosque_mesh_7FRC.png", height = 3*500, width = 3*700, res = 300)
+ggplot(mesh_locations_sf) +
+  geom_sf(aes(color = log_distance_to_mosque), size = 0.005) +
+  scale_color_viridis_c() +
+  theme_minimal() +
+  labs(title = "Log Distance to the Nearest Mosque", color = "")
+dev.off()
+
+# Log distance to hospital
+png("Figures/3Covariates_log_distance_to_hospital_mesh_7FRC.png", height = 3*500, width = 3*700, res = 300)
+ggplot(mesh_locations_sf) +
+  geom_sf(aes(color = log_distance_to_hospital), size = 0.005) +
+  scale_color_viridis_c() +
+  theme_minimal() +
+  labs(title = "Log Distance to the Nearest Hospital", color = "")
+dev.off()
+
+# Log distance to intersection
+png("Figures/3Covariates_log_distance_to_intersection_mesh_7FRC.png", height = 3*500, width = 3*700, res = 300)
+ggplot(mesh_locations_sf) +
+  geom_sf(aes(color = log_distance_to_intersection), size = 0.005) +
+  scale_color_viridis_c() +
+  theme_minimal() +
+  labs(title = "Log Distance to the Nearest Intersection", color = "")
+dev.off()
+
+# Log distance to finance
+png("Figures/3Covariates_log_distance_to_finance_mesh_7FRC.png", height = 3*500, width = 3*700, res = 300)
+ggplot(mesh_locations_sf) +
+  geom_sf(aes(color = log_distance_to_finance), size = 0.005) +
+  scale_color_viridis_c() +
+  theme_minimal() +
+  labs(title = "Log Distance to the Nearest Bank or ATM", color = "")
+dev.off()
+
+# education 
+png("Figures/3Covariates_log_distance_to_education_mesh_7FRC.png", height = 3*500, width = 3*700, res = 300)
+ggplot(mesh_locations_sf) +
+  geom_sf(aes(color = log_distance_to_education), size = 0.002) +
+  scale_color_viridis_c() +
+  theme_minimal() +
+  labs(title = "Log Distance to the Nearest School", color = "")
+dev.off()
+# education 
+png("Figures/3Covariates_log_distance_to_education_mesh_7FRC.png", 
+    height = 3*500, width = 3*700, res = 300)
+ggplot(mesh_locations_sf) +
+  geom_sf(aes(color = log_distance_to_education), size = 0.1) +
+  scale_color_viridis_c(option = "viridis") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14),
+    legend.position = "right",
+    axis.text = element_text(size = 9),
+    axis.title = element_text(size = 11)
+  ) +
+  labs(
+    title = "Log-Transformed Distance to Nearest Educational Institution", 
+    color = "Log Distance",
+    x = "Longitude",
+    y = "Latitude"
+  )
+dev.off()
+```
 

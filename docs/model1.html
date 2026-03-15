@@ -13,7 +13,7 @@
 
 <title>Model 1</title>
 
-<script src="site_libs/header-attrs-2.28/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
@@ -34,8 +34,8 @@
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <script src="site_libs/navigation-1.1/codefolding.js"></script>
-<link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -502,13 +502,53 @@ div.tocify {
 </div>
 
 
+<style type="text/css">
+body .main-container {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+body {
+  max-width: 100% !important;
+}
+
+body, td {
+  font-size: 16px;
+}
+code.r{
+  font-size: 14px;
+}
+pre {
+  font-size: 14px
+}
+.custom-box {
+  background-color: #f5f7fa; /* Light grey-blue background */
+    border-color: #e1e8ed; /* Light border color */
+    color: #2c3e50; /* Dark text color */
+    padding: 15px; /* Padding inside the box */
+    border-radius: 5px; /* Rounded corners */
+    margin-bottom: 20px; /* Spacing below the box */
+}
+.caption {
+  margin: auto;
+  text-align: center;
+  margin-bottom: 20px; /* Spacing below the box */
+}
+</style>
 <p>In this section, we fit <strong>Model 1</strong> as described in the
-paper. This model includes only spatial effects, without any
-covariates.</p>
+paper. This model includes only spatial effects, without any covariates.
+We show two fitting strategies:</p>
+<ul>
+<li><strong><code>lgcp_graph</code> wrapper</strong> (our convenient
+interface, recommended)</li>
+<li><strong>Manual INLA</strong> (standard INLA workflow on the metric
+graph, for advanced users)</li>
+</ul>
+<p>We use a mesh with edge-wise spacing of <strong>50 meters</strong> —
+this is the configuration reported in the paper.</p>
 <div id="data-loading-and-graph-preparation" class="section level2"
-number="1">
-<h2><span class="header-section-number">1</span> Data Loading and Graph
-Preparation</h2>
+number="0.1">
+<h2><span class="header-section-number">0.1</span> Data Loading and
+Graph Preparation</h2>
 <p>This part loads the required libraries, reads the data and graph
 files, and builds a mesh using the graph structure. The operations
 prepare the spatial framework needed for the subsequent modeling
@@ -520,218 +560,401 @@ steps.</p>
 <span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a></span>
 <span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="co"># Load Graph</span></span>
 <span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;Data/data_all_reasons_with_distances_7FRC.qs&quot;</span>)</span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>graph <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;Data/graph_mesh_pruned_100m_7FRC_ver2.qs&quot;</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>graph <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;Data/graph_mesh_pruned_50m_7FRC.qs&quot;</span>)</span>
 <span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="fu">summary</span>(graph)</span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="co"># Note that this graph already has the observation to vertex</span></span>
-<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">build_mesh</span>(<span class="at">h =</span> <span class="fl">0.1</span>)</span>
-<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a></span>
-<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a><span class="co"># Extract the data</span></span>
-<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a>ss <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">get_data</span>()</span>
-<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>dat <span class="ot">&lt;-</span> ss</span>
-<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a>ind.dat <span class="ot">&lt;-</span> graph<span class="sc">$</span>PtV</span>
-<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a></span>
-<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">clear_observations</span>()</span>
-<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a><span class="fu">system.time</span>(graph<span class="sc">$</span><span class="fu">compute_fem</span>())</span>
-<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a></span>
-<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a>n_accidents <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(ss<span class="sc">$</span>AccidentSeverityId)) <span class="co"># 2482 - total number of accidents</span></span></code></pre></div>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="fu">summary</span>(graph)</span></code></pre></div>
+<pre><code>## A metric graph object with:
+## 
+## Vertices:
+##   Total: 67223 
+##   Degree 1: 15;  Degree 2: 6287;  Degree 3: 6002;  Degree 4: 18062;  Degree 5: 1624; 
+##   Degree 6: 31762;  Degree 7: 147;  Degree 8: 3316;  Degree 10: 8; 
+##   With incompatible directions:  7 
+## 
+## Edges: 
+##   Total: 164586 
+##   Lengths: 
+##       Min: 0.002991921  ; Max: 13.24092  ; Total: 15438.28 
+##   Weights: 
+##       Columns: FRC SpeedLimit .weights 
+##   That are circles:  0 
+## 
+## Graph units: 
+##   Vertices unit:  degree  ; Lengths unit:  km 
+## 
+## Longitude and Latitude coordinates:  TRUE
+##   Which spatial package:  sp 
+##   CRS:  +proj=longlat +ellps=WGS84 +no_defs
+## 
+## Some characteristics of the graph: Not computed.
+## 
+## Computed quantities inside the graph: 
+##   Laplacian:  FALSE  ; Geodesic distances:  FALSE 
+##   Resistance distances:  FALSE  ; Finite element matrices:  FALSE 
+## 
+## Mesh: 
+##   Max h_e:  0.0499999  ; Min n_e:  0 
+## 
+## Data: The graph has no data!
+## 
+## Tolerances: 
+##   vertex-vertex:  0.001 
+##   vertex-edge:  0.001 
+##   edge-edge:  0</code></pre>
 </div>
+<div id="fitting-with-lgcp_graph-wrapper-50-m-mesh"
+class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Fitting with
+<code>lgcp_graph</code> wrapper (50 m mesh)</h1>
+<p>The <code>lgcp_graph</code> wrapper is the recommended way to fit
+LGCP models on metric graphs. It internally handles the integration
+weights, the INLA data stack, and the exposure variable <code>E</code>,
+simplifying the workflow considerably. We only need to add the observed
+events, provide covariates at mesh locations, and specify the model
+formula.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">compute_mesh_weights</span>()</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co"># Add observations to extract locations</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>rem.obs <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">add_observations</span>(</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  data, <span class="at">normalized =</span> <span class="cn">TRUE</span>, <span class="at">tolerance =</span> <span class="fl">0.6</span>, <span class="at">clear_obs =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="at">duplicated_strategy =</span> <span class="st">&quot;jitter&quot;</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>)</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co"># Extract prepared data and count events</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>ss <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">get_data</span>()</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>n_accidents <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(ss<span class="sc">$</span>AccidentSeverityId))</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co"># Reset observations to contain only the events (wrapper computes exposures, INLA stack, data internally)</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">clear_observations</span>()</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>obs_50 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>  <span class="at">y =</span> <span class="fu">rep</span>(<span class="dv">1</span>, n_accidents),</span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>  <span class="at">edge_number =</span> ss<span class="sc">$</span>.edge_number,</span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>  <span class="at">distance_on_edge =</span> ss<span class="sc">$</span>.distance_on_edge,</span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>  <span class="at">Intercept =</span> <span class="dv">1</span>,</span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>  <span class="at">.group =</span> <span class="dv">1</span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>)</span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">add_observations</span>(<span class="at">data =</span> obs_50, <span class="at">normalized =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co"># Provide a manual covariate that is constant along edges (intercept)</span></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a>manual_cov_50 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a>  <span class="at">Intercept =</span> <span class="fu">rep</span>(<span class="dv">1</span>, <span class="fu">nrow</span>(graph<span class="sc">$</span>mesh<span class="sc">$</span>VtE)),</span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a>  <span class="at">edge_number =</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>VtE[, <span class="dv">1</span>],</span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a>  <span class="at">distance_on_edge =</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>VtE[, <span class="dv">2</span>],</span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a>  <span class="at">.group =</span> <span class="dv">1</span>,</span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a>  <span class="at">coord_x =</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>V[,<span class="dv">1</span>],</span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a>  <span class="at">coord_y =</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>V[,<span class="dv">2</span>]</span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a>)</span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co"># Build the SPDE model object (used by the wrapper in the formula)</span></span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a>model_iface_50 <span class="ot">&lt;-</span> <span class="fu">graph_spde</span>(graph, <span class="at">alpha =</span> <span class="dv">1</span>, <span class="at">parameterization =</span> <span class="st">&quot;spde&quot;</span>, <span class="at">LGCP =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a></span>
+<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a><span class="co"># Wrapper fit on the 50 m mesh</span></span>
+<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a><span class="fu">system.time</span>(fit_iface_50 <span class="ot">&lt;-</span> <span class="fu">lgcp_graph</span>(</span>
+<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a>  y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> model_iface_50),</span>
+<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a>  <span class="at">graph =</span> graph,</span>
+<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a>  <span class="at">manual_covariates =</span> manual_cov_50,</span>
+<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a>  <span class="at">interpolate =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a>  <span class="at">use_current_mesh =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a>  <span class="at">control.fixed   =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">Intercept =</span> <span class="dv">0</span>)),</span>
+<span id="cb3-48"><a href="#cb3-48" tabindex="-1"></a>  <span class="at">control.inla    =</span> <span class="fu">list</span>(<span class="at">control.vb =</span> <span class="fu">list</span>(<span class="at">enable =</span> <span class="cn">FALSE</span>), <span class="at">int.strategy =</span> <span class="st">&quot;eb&quot;</span>)</span>
+<span id="cb3-49"><a href="#cb3-49" tabindex="-1"></a>))</span></code></pre></div>
+<pre><code>##    user  system elapsed 
+## 670.762 199.214 837.317</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">summary</span>(fit_iface_50)</span></code></pre></div>
+<pre><code>## Time used:
+##     Pre = 3.2, Running = 50, Post = 15.2, Total = 68.4 
+## Fixed effects:
+##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld
+## Intercept -2.625 0.185     -2.988   -2.625     -2.262 -2.625   0
+## 
+## Random effects:
+##   Name     Model
+##     field CGeneric
+## 
+## Model hyperparameters:
+##                   mean    sd 0.025quant 0.5quant 0.975quant  mode
+## Theta1 for field  1.53 0.031       1.47     1.53       1.59  1.53
+## Theta2 for field -1.64 0.215      -2.08    -1.63      -1.24 -1.59
+## 
+## Watanabe-Akaike information criterion (WAIC) ...: 27808.18
+## Effective number of parameters .................: 10672.15
+## 
+## Marginal log-Likelihood:  -5583.51 
+##  is computed 
+## Posterior summaries for the linear predictor and the fitted values are computed
+## (Posterior marginals needs also &#39;control.compute=list(return.marginals.predictor=TRUE)&#39;)</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>spde_iface_50 <span class="ot">&lt;-</span> <span class="fu">spde_metric_graph_result</span>(fit_iface_50, <span class="st">&quot;field&quot;</span>, model_iface_50)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>result_df_iface_50 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">parameter =</span> <span class="fu">c</span>(<span class="st">&quot;kappa&quot;</span>, <span class="st">&quot;tau&quot;</span>),</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="at">mean =</span> <span class="fu">c</span>(spde_iface_50<span class="sc">$</span>summary.kappa<span class="sc">$</span>mean, spde_iface_50<span class="sc">$</span>summary.tau<span class="sc">$</span>mean),</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="at">lower =</span> <span class="fu">c</span>(spde_iface_50<span class="sc">$</span>summary.kappa<span class="sc">$</span><span class="st">&quot;0.025quant&quot;</span>, spde_iface_50<span class="sc">$</span>summary.tau<span class="sc">$</span><span class="st">&quot;0.025quant&quot;</span>),</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="at">upper =</span> <span class="fu">c</span>(spde_iface_50<span class="sc">$</span>summary.kappa<span class="sc">$</span><span class="st">&quot;0.975quant&quot;</span>, spde_iface_50<span class="sc">$</span>summary.tau<span class="sc">$</span><span class="st">&quot;0.975quant&quot;</span>),</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>  <span class="at">mode =</span> <span class="fu">c</span>(spde_iface_50<span class="sc">$</span>summary.kappa<span class="sc">$</span>mode, spde_iface_50<span class="sc">$</span>summary.tau<span class="sc">$</span>mode)</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>)</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="fu">print</span>(result_df_iface_50)</span></code></pre></div>
+<pre><code>##   parameter      mean     lower     upper      mode
+## 1     kappa 0.1991835 0.1253717 0.2891126 0.1924097
+## 2       tau 0.2171138 0.2043222 0.2303735 0.2168549</code></pre>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># Save workspace snapshot for the 50 m mesh</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">save.image</span>(<span class="st">&quot;Data/5Fit_model1_alpha1_exact_50m_upd.RData&quot;</span>)</span></code></pre></div>
+<div id="visualizing-model-results" class="section level2" number="1.1">
+<h2><span class="header-section-number">1.1</span> Visualizing Model
+Results</h2>
+<p>When fitting with <code>lgcp_graph</code>, the returned object
+includes a <code>graph_fitted_data</code> data frame containing
+predictions at both observation and integration locations. We can plot
+the three key outputs directly using
+<code>graph$plot_function</code>:</p>
+<ul>
+<li><strong>Linear predictor</strong>: posterior mean of the linear
+predictor</li>
+<li><strong>Predicted field</strong>: posterior mean of the latent
+Gaussian field <span class="math inline">\(u(s)\)</span></li>
+<li><strong>Log fitted values</strong>: log of the predicted
+intensity</li>
+</ul>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">library</span>(scico)</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="fu">library</span>(viridis)</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="co"># Posterior mean of the log-intensity (linear predictor)</span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="fu">png</span>(<span class="st">&quot;Figures/model1_linear_predictor.png&quot;</span>, <span class="at">height =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">700</span>, <span class="at">width =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">900</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(<span class="at">data =</span> <span class="st">&quot;.linear_predictor&quot;</span>, <span class="at">newdata =</span> fit_iface_50<span class="sc">$</span>graph_fitted_data,</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>                    <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>, <span class="at">scale_color =</span> <span class="fu">scale_color_scico</span>(<span class="at">palette =</span> <span class="st">&quot;vik&quot;</span>, <span class="at">midpoint =</span> <span class="dv">0</span>)) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="fu">print</span>(p1)</span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="fu">dev.off</span>()</span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a><span class="co"># Posterior mean of the latent field u(s)</span></span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a><span class="fu">png</span>(<span class="st">&quot;Figures/model1_predicted_field.png&quot;</span>, <span class="at">height =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">700</span>, <span class="at">width =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">900</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(<span class="at">data =</span> <span class="st">&quot;.predicted_field&quot;</span>, <span class="at">newdata =</span> fit_iface_50<span class="sc">$</span>graph_fitted_data,</span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a>                    <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>, <span class="at">scale_color =</span> <span class="fu">scale_color_scico</span>(<span class="at">palette =</span> <span class="st">&quot;vik&quot;</span>, <span class="at">midpoint =</span> <span class="dv">0</span>)) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a><span class="fu">print</span>(p2)</span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a><span class="fu">dev.off</span>()</span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a></span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a><span class="co"># Log of fitted values (log-intensity)</span></span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a>fit_iface_50<span class="sc">$</span>graph_fitted_data<span class="sc">$</span>.log_fitted_values <span class="ot">&lt;-</span> <span class="fu">log</span>(fit_iface_50<span class="sc">$</span>graph_fitted_data<span class="sc">$</span>.fitted_values)</span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a><span class="fu">png</span>(<span class="st">&quot;Figures/model1_log_fitted_values.png&quot;</span>, <span class="at">height =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">700</span>, <span class="at">width =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">900</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a>p3 <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(<span class="at">data =</span> <span class="st">&quot;.log_fitted_values&quot;</span>, <span class="at">newdata =</span> fit_iface_50<span class="sc">$</span>graph_fitted_data,</span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a>                    <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>, <span class="at">scale_color =</span> <span class="fu">scale_color_scico</span>(<span class="at">palette =</span> <span class="st">&quot;vik&quot;</span>, <span class="at">midpoint =</span> <span class="dv">0</span>)) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a><span class="fu">print</span>(p3)</span>
+<span id="cb10-25"><a href="#cb10-25" tabindex="-1"></a><span class="fu">dev.off</span>()</span></code></pre></div>
+<ol style="list-style-type: decimal">
+<li><p><strong>Linear predictor</strong>:
+<img src="Figures/model1_linear_predictor.png" width="1350" style="display: block; margin: auto;" /></p></li>
+<li><p><strong>Predicted field</strong> <span
+class="math inline">\(u(s)\)</span>:
+<img src="Figures/model1_predicted_field.png" width="1350" style="display: block; margin: auto;" /></p></li>
+<li><p><strong>Log fitted values</strong>:
+<img src="Figures/model1_log_fitted_values.png" width="1350" style="display: block; margin: auto;" /></p></li>
+</ol>
+</div>
+</div>
+<div id="alternative-manual-inla-workflow-50-m-mesh"
+class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Alternative: Manual
+INLA workflow (50 m mesh)</h1>
+<p>For users who want full control over the INLA stack and data
+preparation, we show here the equivalent manual workflow. This approach
+requires explicitly constructing the integration points, building the
+INLA stack, and passing the exposure variable <code>E</code> to
+<code>inla()</code>.</p>
 <div id="preparing-the-spatial-observations" class="section level2"
-number="2">
-<h2><span class="header-section-number">2</span> Preparing the Spatial
+number="2.1">
+<h2><span class="header-section-number">2.1</span> Preparing the Spatial
 Observations</h2>
 <p>Before fitting the model, we prepare the spatial observations by
 defining integration points and associating them with the mesh. This
 segmentation allows the model to differentiate between observed
-locations and additional integration nodes.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>alpha <span class="ot">&lt;-</span> <span class="dv">1</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>atilde <span class="ot">&lt;-</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>weights</span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co"># These are the indices of the mesh nodes which are not observation locations</span></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>ind.add <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(atilde), ind.dat)</span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a></span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co"># Add the locations which are observed</span></span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">add_observations</span>(</span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  <span class="at">data =</span> <span class="fu">data.frame</span>(</span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>    <span class="at">y =</span> <span class="fu">rep</span>(<span class="dv">1</span>, <span class="fu">length</span>(ind.dat)),</span>
-<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>    <span class="at">e =</span> atilde[ind.dat],</span>
-<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>    <span class="at">edge_number =</span> dat<span class="sc">$</span>.edge_number,</span>
-<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>    <span class="at">distance_on_edge =</span> dat<span class="sc">$</span>.distance_on_edge</span>
-<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>  ),</span>
-<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>  <span class="at">normalized =</span> <span class="cn">TRUE</span></span>
-<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>)</span>
-<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a></span>
-<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="co"># Add the remaining integration points</span></span>
-<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">add_observations</span>(</span>
-<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>  <span class="at">data =</span> <span class="fu">data.frame</span>(</span>
-<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a>    <span class="at">y =</span> <span class="fu">rep</span>(<span class="dv">0</span>, <span class="fu">length</span>(ind.add)),</span>
-<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>    <span class="at">e =</span> atilde[ind.add],</span>
-<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a>    <span class="at">edge_number =</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>VtE[ind.add, <span class="dv">1</span>],</span>
-<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a>    <span class="at">distance_on_edge =</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>VtE[ind.add, <span class="dv">2</span>]</span>
-<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a>  ),</span>
-<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a>  <span class="at">normalized =</span> <span class="cn">TRUE</span></span>
-<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a>)</span></code></pre></div>
+locations and additional integration nodes. The <code>e</code> field
+holds integration weights.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>alpha <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>atilde <span class="ot">&lt;-</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>weights</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="co"># Clear and add observations explicitly for modeling</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">clear_observations</span>()</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a><span class="co"># Add the observed accidents</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">add_observations</span>(</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a>  <span class="at">data =</span> <span class="fu">data.frame</span>(</span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a>    <span class="at">y =</span> <span class="fu">rep</span>(<span class="dv">1</span>, n_accidents),</span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a>    <span class="at">e =</span> <span class="dv">0</span>,</span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>    <span class="at">edge_number =</span> ss<span class="sc">$</span>.edge_number,</span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a>    <span class="at">distance_on_edge =</span> ss<span class="sc">$</span>.distance_on_edge,</span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a>    <span class="at">Intercept =</span> <span class="dv">1</span></span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a>  ),</span>
+<span id="cb11-16"><a href="#cb11-16" tabindex="-1"></a>  <span class="at">normalized =</span> <span class="cn">TRUE</span></span>
+<span id="cb11-17"><a href="#cb11-17" tabindex="-1"></a>)</span>
+<span id="cb11-18"><a href="#cb11-18" tabindex="-1"></a></span>
+<span id="cb11-19"><a href="#cb11-19" tabindex="-1"></a><span class="co"># Add integration points</span></span>
+<span id="cb11-20"><a href="#cb11-20" tabindex="-1"></a>graph<span class="sc">$</span><span class="fu">add_observations</span>(</span>
+<span id="cb11-21"><a href="#cb11-21" tabindex="-1"></a>  <span class="at">data =</span> <span class="fu">data.frame</span>(</span>
+<span id="cb11-22"><a href="#cb11-22" tabindex="-1"></a>    <span class="at">y =</span> <span class="fu">rep</span>(<span class="dv">0</span>, <span class="fu">length</span>(atilde)),</span>
+<span id="cb11-23"><a href="#cb11-23" tabindex="-1"></a>    <span class="at">e =</span> atilde,</span>
+<span id="cb11-24"><a href="#cb11-24" tabindex="-1"></a>    <span class="at">edge_number =</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>VtE[, <span class="dv">1</span>],</span>
+<span id="cb11-25"><a href="#cb11-25" tabindex="-1"></a>    <span class="at">distance_on_edge =</span> graph<span class="sc">$</span>mesh<span class="sc">$</span>VtE[, <span class="dv">2</span>],</span>
+<span id="cb11-26"><a href="#cb11-26" tabindex="-1"></a>    <span class="at">Intercept =</span> <span class="dv">1</span></span>
+<span id="cb11-27"><a href="#cb11-27" tabindex="-1"></a>  ),</span>
+<span id="cb11-28"><a href="#cb11-28" tabindex="-1"></a>  <span class="at">normalized =</span> <span class="cn">TRUE</span></span>
+<span id="cb11-29"><a href="#cb11-29" tabindex="-1"></a>)</span></code></pre></div>
 </div>
-<div id="creating-the-spatial-model" class="section level2" number="3">
-<h2><span class="header-section-number">3</span> Creating the Spatial
-Model</h2>
-<p>Here we build the <code>graph_spde</code> model using the prepared
-spatial data. The subsequent code stacks the data and fits a
-log-Gaussian Cox process without covariates. You can choose between 2
-different parameterizations: “spde” or “matern”. We will use the “spde”
-parameterization in this example. In case if you want to use the
-“matern” parameterization, you can change the parameterization argument
-in the <code>graph_spde</code> function and use the code snippet
-provided in the comments to convert back to “spde” parameterization.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Create the Graph_SPDE model</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co"># Parametrization can either be &quot;spde&quot; or &quot;matern&quot;</span></span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="fu">system.time</span>(spde_model1 <span class="ot">&lt;-</span> <span class="fu">graph_spde</span>(graph, <span class="at">alpha =</span> alpha, <span class="at">parameterization =</span> <span class="st">&quot;spde&quot;</span>, <span class="at">verbose =</span> <span class="dv">1</span>))</span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>data_spde <span class="ot">&lt;-</span> <span class="fu">graph_data_spde</span>(<span class="at">graph_spde =</span> spde_model1, <span class="at">name =</span> <span class="st">&quot;field&quot;</span>)</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a></span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>stk1_no_repl <span class="ot">&lt;-</span> <span class="fu">inla.stack</span>(</span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="at">data =</span> data_spde[[<span class="st">&quot;data&quot;</span>]],</span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="at">A =</span> data_spde[[<span class="st">&quot;basis&quot;</span>]],</span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="at">effects =</span> <span class="fu">c</span>(</span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>    data_spde[[<span class="st">&quot;index&quot;</span>]],</span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>    <span class="fu">list</span>(<span class="at">Intercept =</span> <span class="dv">1</span>)</span>
-<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  ),</span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  <span class="at">tag =</span> <span class="st">&quot;data&quot;</span></span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>)</span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a></span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>spde_fit1_no_repl <span class="ot">&lt;-</span> <span class="fu">inla</span>(y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> spde_model1),</span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>  <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>, <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk1_no_repl),</span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>  <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk1_no_repl)),</span>
-<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>), <span class="co"># Necessary for the computation of the excursion sets</span></span>
-<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>  <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk1_no_repl)<span class="sc">$</span>e</span>
-<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>)</span>
-<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a></span>
-<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>spde_result <span class="ot">&lt;-</span> <span class="fu">spde_metric_graph_result</span>(spde_fit1_no_repl, <span class="st">&quot;field&quot;</span>, spde_model1)</span>
-<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a></span>
-<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a>alpha <span class="ot">&lt;-</span> <span class="dv">1</span></span>
-<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a>nu <span class="ot">&lt;-</span> alpha <span class="sc">-</span> <span class="fl">0.5</span></span>
-<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a>kappa <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="dv">8</span> <span class="sc">*</span> nu) <span class="sc">/</span> range</span>
-<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a>tau <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">gamma</span>(nu) <span class="sc">/</span> (sigma<span class="sc">^</span><span class="dv">2</span> <span class="sc">*</span> <span class="fu">gamma</span>(alpha) <span class="sc">*</span> <span class="fu">sqrt</span>(<span class="dv">4</span> <span class="sc">*</span> pi) <span class="sc">*</span> kappa<span class="sc">^</span>(<span class="dv">2</span> <span class="sc">*</span> nu)))</span>
-<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a></span>
-<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co"># For &quot;spde&quot; parameterization</span></span>
-<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a>result_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a>  <span class="at">parameter =</span> <span class="fu">c</span>(<span class="st">&quot;kappa&quot;</span>, <span class="st">&quot;tau&quot;</span>),</span>
-<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a>  <span class="at">mean =</span> <span class="fu">c</span>(</span>
-<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a>    spde_result<span class="sc">$</span>summary.kappa<span class="sc">$</span>mean,</span>
-<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a>    spde_result<span class="sc">$</span>summary.tau<span class="sc">$</span>mean</span>
-<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a>  ),</span>
-<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a>  <span class="at">mode =</span> <span class="fu">c</span>(</span>
-<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a>    spde_result<span class="sc">$</span>summary.kappa<span class="sc">$</span>mode,</span>
-<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a>    spde_result<span class="sc">$</span>summary.tau<span class="sc">$</span>mode</span>
-<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a>  )</span>
-<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a>)</span>
-<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a><span class="fu">print</span>(result_df)</span>
-<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a></span>
-<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a></span>
-<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a><span class="co"># For &quot;matern&quot; parameterization</span></span>
-<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a>result_df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a>  <span class="at">parameter =</span> <span class="fu">c</span>(<span class="st">&quot;sigma&quot;</span>, <span class="st">&quot;range&quot;</span>),</span>
-<span id="cb3-48"><a href="#cb3-48" tabindex="-1"></a>  <span class="at">rspde_version =</span> <span class="fu">c</span>(sigma, range),</span>
-<span id="cb3-49"><a href="#cb3-49" tabindex="-1"></a>  <span class="at">mean_exact =</span> <span class="fu">c</span>(</span>
-<span id="cb3-50"><a href="#cb3-50" tabindex="-1"></a>    spde_result<span class="sc">$</span>summary.sigma<span class="sc">$</span>mean,</span>
-<span id="cb3-51"><a href="#cb3-51" tabindex="-1"></a>    spde_result<span class="sc">$</span>summary.range<span class="sc">$</span>mean</span>
-<span id="cb3-52"><a href="#cb3-52" tabindex="-1"></a>  ),</span>
-<span id="cb3-53"><a href="#cb3-53" tabindex="-1"></a>  <span class="at">mode_exact =</span> <span class="fu">c</span>(</span>
-<span id="cb3-54"><a href="#cb3-54" tabindex="-1"></a>    spde_result<span class="sc">$</span>summary.sigma<span class="sc">$</span>mode,</span>
-<span id="cb3-55"><a href="#cb3-55" tabindex="-1"></a>    spde_result<span class="sc">$</span>summary.range<span class="sc">$</span>mode</span>
-<span id="cb3-56"><a href="#cb3-56" tabindex="-1"></a>  )</span>
-<span id="cb3-57"><a href="#cb3-57" tabindex="-1"></a>)</span>
-<span id="cb3-58"><a href="#cb3-58" tabindex="-1"></a><span class="fu">print</span>(result_df)</span>
-<span id="cb3-59"><a href="#cb3-59" tabindex="-1"></a></span>
-<span id="cb3-60"><a href="#cb3-60" tabindex="-1"></a><span class="co"># Plotting the posterior distribution of the parameters</span></span>
-<span id="cb3-61"><a href="#cb3-61" tabindex="-1"></a>posterior_df_fit <span class="ot">&lt;-</span> <span class="fu">gg_df</span>(spde_result)</span>
-<span id="cb3-62"><a href="#cb3-62" tabindex="-1"></a><span class="fu">ggplot</span>(posterior_df_fit) <span class="sc">+</span></span>
-<span id="cb3-63"><a href="#cb3-63" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y)) <span class="sc">+</span></span>
-<span id="cb3-64"><a href="#cb3-64" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>parameter, <span class="at">scales =</span> <span class="st">&quot;free&quot;</span>) <span class="sc">+</span></span>
-<span id="cb3-65"><a href="#cb3-65" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="st">&quot;Density&quot;</span>)</span>
-<span id="cb3-66"><a href="#cb3-66" tabindex="-1"></a><span class="fu">save.image</span>(<span class="st">&quot;Data/5Fit_model1_alpha1_exact_100m.RData&quot;</span>)</span></code></pre></div>
+<div id="creating-the-spatial-model-manual-inla-on-50-m-mesh"
+class="section level2" number="2.2">
+<h2><span class="header-section-number">2.2</span> Creating the spatial
+model (Manual INLA on 50 m mesh)</h2>
+<p>We build the SPDE model on the graph, construct the INLA stack, and
+fit the log-Gaussian Cox process without covariates. We use the
+<strong>“spde”</strong> parameterization. (If switching to
+<strong>“matern”</strong>, see the commented snippet for converting to
+SPDE parameters.)</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co"># Create the Graph SPDE model (spde parameterization)</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="fu">system.time</span>(</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  model_manual_50 <span class="ot">&lt;-</span> <span class="fu">graph_spde</span>(graph, <span class="at">alpha =</span> alpha, <span class="at">parameterization =</span> <span class="st">&quot;spde&quot;</span>, <span class="at">verbose =</span> <span class="dv">1</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>)</span></code></pre></div>
+<pre><code>##    user  system elapsed 
+## 604.667 217.065 832.647</code></pre>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="co"># user  system elapsed</span></span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a><span class="co"># 523.109 183.495 712.815</span></span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a><span class="fu">qsave</span>(model_manual_50, <span class="st">&quot;Data/model1_graph_spde_50m_7FRC.qs&quot;</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a><span class="co"># Build the INLA stack for Manual INLA</span></span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>data_manual_50 <span class="ot">&lt;-</span> <span class="fu">graph_data_spde</span>(<span class="at">graph_spde =</span> model_manual_50, <span class="at">name =</span> <span class="st">&quot;field&quot;</span>, <span class="at">covariates =</span> <span class="fu">c</span>(<span class="st">&quot;Intercept&quot;</span>))</span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a><span class="fu">qsave</span>(data_manual_50, <span class="st">&quot;Data/model1_graph_data_spde_50m_7FRC.qs&quot;</span>)</span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a></span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a>stk_50 <span class="ot">&lt;-</span> <span class="fu">inla.stack</span>(</span>
+<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a>  <span class="at">data    =</span> data_manual_50[[<span class="st">&quot;data&quot;</span>]],</span>
+<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a>  <span class="at">A       =</span> data_manual_50[[<span class="st">&quot;basis&quot;</span>]],</span>
+<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a>  <span class="at">effects =</span> data_manual_50[[<span class="st">&quot;index&quot;</span>]]</span>
+<span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a>)</span>
+<span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" tabindex="-1"></a><span class="co"># Manual INLA fit on the 50 m mesh</span></span>
+<span id="cb14-16"><a href="#cb14-16" tabindex="-1"></a>fit_manual_50 <span class="ot">&lt;-</span> <span class="fu">inla</span>(</span>
+<span id="cb14-17"><a href="#cb14-17" tabindex="-1"></a>  y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> <span class="fu">f</span>(field, <span class="at">model =</span> model_manual_50),</span>
+<span id="cb14-18"><a href="#cb14-18" tabindex="-1"></a>  <span class="at">family =</span> <span class="st">&quot;poisson&quot;</span>,</span>
+<span id="cb14-19"><a href="#cb14-19" tabindex="-1"></a>  <span class="at">data =</span> <span class="fu">inla.stack.data</span>(stk_50),</span>
+<span id="cb14-20"><a href="#cb14-20" tabindex="-1"></a>  <span class="at">control.predictor =</span> <span class="fu">list</span>(<span class="at">A =</span> <span class="fu">inla.stack.A</span>(stk_50), <span class="at">compute =</span> <span class="cn">TRUE</span>, <span class="at">link =</span> <span class="dv">1</span>),</span>
+<span id="cb14-21"><a href="#cb14-21" tabindex="-1"></a>  <span class="at">control.compute   =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>),  <span class="co"># needed for excursion sets</span></span>
+<span id="cb14-22"><a href="#cb14-22" tabindex="-1"></a>  <span class="at">control.fixed     =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">Intercept =</span> <span class="dv">0</span>)),  <span class="co"># manual intercept - default prior correction</span></span>
+<span id="cb14-23"><a href="#cb14-23" tabindex="-1"></a>  <span class="at">control.inla      =</span> <span class="fu">list</span>(<span class="at">control.vb =</span> <span class="fu">list</span>(<span class="at">enable =</span> <span class="cn">FALSE</span>), <span class="at">int.strategy =</span> <span class="st">&quot;eb&quot;</span>),</span>
+<span id="cb14-24"><a href="#cb14-24" tabindex="-1"></a>  <span class="at">E =</span> <span class="fu">inla.stack.data</span>(stk_50)<span class="sc">$</span>e</span>
+<span id="cb14-25"><a href="#cb14-25" tabindex="-1"></a>)</span>
+<span id="cb14-26"><a href="#cb14-26" tabindex="-1"></a><span class="fu">summary</span>(fit_manual_50)</span></code></pre></div>
+<pre><code>## Time used:
+##     Pre = 3.09, Running = 51.5, Post = 15.4, Total = 70 
+## Fixed effects:
+##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld
+## Intercept -2.626 0.186     -2.991   -2.626     -2.262 -2.626   0
+## 
+## Random effects:
+##   Name     Model
+##     field CGeneric
+## 
+## Model hyperparameters:
+##                   mean    sd 0.025quant 0.5quant 0.975quant  mode
+## Theta1 for field  1.53 0.031       1.47     1.53       1.59  1.53
+## Theta2 for field -1.64 0.215      -2.08    -1.63      -1.23 -1.60
+## 
+## Watanabe-Akaike information criterion (WAIC) ...: 27948.12
+## Effective number of parameters .................: 10741.99
+## 
+## Marginal log-Likelihood:  -5583.50 
+##  is computed 
+## Posterior summaries for the linear predictor and the fitted values are computed
+## (Posterior marginals needs also &#39;control.compute=list(return.marginals.predictor=TRUE)&#39;)</code></pre>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="co"># Summaries of hyperparameters (SPDE)</span></span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>spde_manual_50 <span class="ot">&lt;-</span> <span class="fu">spde_metric_graph_result</span>(fit_manual_50, <span class="st">&quot;field&quot;</span>, model_manual_50)</span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a><span class="co"># For &quot;spde&quot; parameterization</span></span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a>result_df_manual_50 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a>  <span class="at">parameter =</span> <span class="fu">c</span>(<span class="st">&quot;kappa&quot;</span>, <span class="st">&quot;tau&quot;</span>),</span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a>  <span class="at">mean =</span> <span class="fu">c</span>(spde_manual_50<span class="sc">$</span>summary.kappa<span class="sc">$</span>mean, spde_manual_50<span class="sc">$</span>summary.tau<span class="sc">$</span>mean),</span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a>  <span class="at">lower =</span> <span class="fu">c</span>(spde_manual_50<span class="sc">$</span>summary.kappa<span class="sc">$</span><span class="st">&quot;0.025quant&quot;</span>, spde_manual_50<span class="sc">$</span>summary.tau<span class="sc">$</span><span class="st">&quot;0.025quant&quot;</span>),</span>
+<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a>  <span class="at">upper =</span> <span class="fu">c</span>(spde_manual_50<span class="sc">$</span>summary.kappa<span class="sc">$</span><span class="st">&quot;0.975quant&quot;</span>, spde_manual_50<span class="sc">$</span>summary.tau<span class="sc">$</span><span class="st">&quot;0.975quant&quot;</span>),</span>
+<span id="cb16-10"><a href="#cb16-10" tabindex="-1"></a>  <span class="at">mode =</span> <span class="fu">c</span>(spde_manual_50<span class="sc">$</span>summary.kappa<span class="sc">$</span>mode, spde_manual_50<span class="sc">$</span>summary.tau<span class="sc">$</span>mode)</span>
+<span id="cb16-11"><a href="#cb16-11" tabindex="-1"></a>)</span>
+<span id="cb16-12"><a href="#cb16-12" tabindex="-1"></a><span class="fu">print</span>(result_df_manual_50)</span></code></pre></div>
+<pre><code>##   parameter      mean     lower     upper      mode
+## 1     kappa 0.1991585 0.1253581 0.2901538 0.1915579
+## 2       tau 0.2171419 0.2045220 0.2305956 0.2165945</code></pre>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="co"># # If using &quot;matern&quot; parameterization, you may convert to (kappa, tau) via:</span></span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a><span class="co"># alpha &lt;- 1; nu &lt;- alpha - 0.5</span></span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a><span class="co"># kappa &lt;- sqrt(8 * nu) / range</span></span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a><span class="co"># tau   &lt;- sqrt(gamma(nu) / (sigma^2 * gamma(alpha) * sqrt(4 * pi) * kappa^(2 * nu)))</span></span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a><span class="co"># # For &quot;matern&quot; parameterization</span></span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a><span class="co"># result_df &lt;- data.frame(</span></span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a><span class="co">#   parameter = c(&quot;sigma&quot;, &quot;range&quot;),</span></span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a><span class="co">#   rspde_version = c(sigma, range),</span></span>
+<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a><span class="co">#   mean_exact = c(</span></span>
+<span id="cb18-10"><a href="#cb18-10" tabindex="-1"></a><span class="co">#     spde_result$summary.sigma$mean,</span></span>
+<span id="cb18-11"><a href="#cb18-11" tabindex="-1"></a><span class="co">#     spde_result$summary.range$mean</span></span>
+<span id="cb18-12"><a href="#cb18-12" tabindex="-1"></a><span class="co">#   ),</span></span>
+<span id="cb18-13"><a href="#cb18-13" tabindex="-1"></a><span class="co">#   mode_exact = c(</span></span>
+<span id="cb18-14"><a href="#cb18-14" tabindex="-1"></a><span class="co">#     spde_result$summary.sigma$mode,</span></span>
+<span id="cb18-15"><a href="#cb18-15" tabindex="-1"></a><span class="co">#     spde_result$summary.range$mode</span></span>
+<span id="cb18-16"><a href="#cb18-16" tabindex="-1"></a><span class="co">#   )</span></span>
+<span id="cb18-17"><a href="#cb18-17" tabindex="-1"></a><span class="co"># )</span></span>
+<span id="cb18-18"><a href="#cb18-18" tabindex="-1"></a><span class="co"># print(result_df)</span></span>
+<span id="cb18-19"><a href="#cb18-19" tabindex="-1"></a></span>
+<span id="cb18-20"><a href="#cb18-20" tabindex="-1"></a><span class="co"># Optional: posterior density plot</span></span>
+<span id="cb18-21"><a href="#cb18-21" tabindex="-1"></a><span class="co"># posterior_df_fit_50 &lt;- gg_df(spde_manual_50)</span></span>
+<span id="cb18-22"><a href="#cb18-22" tabindex="-1"></a><span class="co"># ggplot(posterior_df_fit_50) +</span></span>
+<span id="cb18-23"><a href="#cb18-23" tabindex="-1"></a><span class="co">#   geom_line(aes(x = x, y = y)) +</span></span>
+<span id="cb18-24"><a href="#cb18-24" tabindex="-1"></a><span class="co">#   facet_wrap(~parameter, scales = &quot;free&quot;) +</span></span>
+<span id="cb18-25"><a href="#cb18-25" tabindex="-1"></a><span class="co">#   labs(y = &quot;Density&quot;)</span></span></code></pre></div>
 </div>
-<div id="visualizing-model-results" class="section level2" number="4">
-<h2><span class="header-section-number">4</span> Visualizing Model
-Results</h2>
-<p>The final section extracts and visualizes the model’s predictions,
-including the intensity and latent field. Several plotting styles are
-applied, and the plots are saved as image files for further review.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="do">###### Extracting results ######</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co"># summary.random - contains the posterior mean of the unstructured random effect, u(s)</span></span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co"># summary.fitted.values - contains the predicted intensity (mean number of events per unit area), lambda</span></span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co"># summary.linear.predictor - contains the posterior mean of the linear predictor, log(lambda)</span></span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a></span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="fu">library</span>(scico)</span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="fu">library</span>(gridExtra)</span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="fu">library</span>(gridExtra)</span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="fu">library</span>(viridis)</span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co"># Function to plot and save results</span></span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>plot_and_save_results <span class="ot">&lt;-</span> <span class="cf">function</span>(fit_object, graph, stk, file_prefix) {</span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>  <span class="co"># Extracting intensity results</span></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>  index <span class="ot">&lt;-</span> <span class="fu">inla.stack.index</span>(stk, <span class="at">tag =</span> <span class="st">&quot;data&quot;</span>)<span class="sc">$</span>effect</span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>  lambda_mean <span class="ot">&lt;-</span> fit_object<span class="sc">$</span>summary.fitted.values[index, <span class="st">&quot;mean&quot;</span>]</span>
-<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a></span>
-<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>  <span class="do">#### Intensity Plot Variations ####</span></span>
-<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a></span>
-<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a>  <span class="co"># Colormap 1: vik with white background (scico + theme_minimal)</span></span>
-<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a>  <span class="fu">png</span>(<span class="fu">paste0</span>(file_prefix, <span class="st">&quot;_intensity_vik_minimal.png&quot;</span>), <span class="at">height =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">700</span>, <span class="at">width =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">900</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
-<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a>  p_vik_minimal <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(<span class="at">X =</span> <span class="fu">exp</span>(lambda_mean), <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>, <span class="at">scale_color =</span> <span class="fu">scale_color_scico</span>(<span class="at">palette =</span> <span class="st">&quot;vik&quot;</span>, <span class="at">midpoint =</span> <span class="dv">0</span>, <span class="at">begin =</span> <span class="fl">0.1</span>)) <span class="sc">+</span></span>
-<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="fu">expression</span>(<span class="fu">paste</span>(lambda, <span class="st">&quot;, intensity&quot;</span>))) <span class="sc">+</span></span>
-<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span>
-<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a>  <span class="fu">print</span>(p_vik_minimal)</span>
-<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a>  <span class="fu">dev.off</span>()</span>
-<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a></span>
-<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a>  <span class="co"># Colormap 2: viridis</span></span>
-<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a>  <span class="fu">png</span>(<span class="fu">paste0</span>(file_prefix, <span class="st">&quot;_intensity_viridis.png&quot;</span>), <span class="at">height =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">700</span>, <span class="at">width =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">900</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
-<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a>  p_viridis <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(<span class="at">X =</span> <span class="fu">exp</span>(lambda_mean), <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>, <span class="at">scale_color =</span> <span class="fu">scale_color_viridis</span>(<span class="at">option =</span> <span class="st">&quot;D&quot;</span>, <span class="at">direction =</span> <span class="dv">1</span>)) <span class="sc">+</span></span>
-<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="fu">expression</span>(<span class="fu">paste</span>(lambda, <span class="st">&quot;, intensity&quot;</span>))) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
-<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a>  <span class="fu">print</span>(p_viridis)</span>
-<span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a>  <span class="fu">dev.off</span>()</span>
-<span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a></span>
-<span id="cb4-34"><a href="#cb4-34" tabindex="-1"></a>  <span class="co"># Colormap 4: plasma (viridis)</span></span>
-<span id="cb4-35"><a href="#cb4-35" tabindex="-1"></a>  <span class="fu">png</span>(<span class="fu">paste0</span>(file_prefix, <span class="st">&quot;_intensity_plasma.png&quot;</span>), <span class="at">height =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">700</span>, <span class="at">width =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">900</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
-<span id="cb4-36"><a href="#cb4-36" tabindex="-1"></a>  p_plasma <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(<span class="at">X =</span> <span class="fu">exp</span>(lambda_mean), <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>, <span class="at">scale_color =</span> <span class="fu">scale_color_viridis</span>(<span class="at">option =</span> <span class="st">&quot;plasma&quot;</span>, <span class="at">direction =</span> <span class="dv">1</span>)) <span class="sc">+</span></span>
-<span id="cb4-37"><a href="#cb4-37" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="fu">expression</span>(<span class="fu">paste</span>(lambda, <span class="st">&quot;, intensity&quot;</span>))) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
-<span id="cb4-38"><a href="#cb4-38" tabindex="-1"></a>  <span class="fu">print</span>(p_plasma)</span>
-<span id="cb4-39"><a href="#cb4-39" tabindex="-1"></a>  <span class="fu">dev.off</span>()</span>
-<span id="cb4-40"><a href="#cb4-40" tabindex="-1"></a></span>
-<span id="cb4-41"><a href="#cb4-41" tabindex="-1"></a>  <span class="do">#### Latent Field Plot Variations ####</span></span>
-<span id="cb4-42"><a href="#cb4-42" tabindex="-1"></a>  u_posterior_mean <span class="ot">&lt;-</span> fit_object<span class="sc">$</span>summary.random<span class="sc">$</span>field[[<span class="st">&quot;mean&quot;</span>]]</span>
-<span id="cb4-43"><a href="#cb4-43" tabindex="-1"></a></span>
-<span id="cb4-44"><a href="#cb4-44" tabindex="-1"></a>  <span class="fu">png</span>(<span class="fu">paste0</span>(file_prefix, <span class="st">&quot;_posterior_u.png&quot;</span>), <span class="at">height =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">700</span>, <span class="at">width =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">900</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
-<span id="cb4-45"><a href="#cb4-45" tabindex="-1"></a>  p1 <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(<span class="at">X =</span> u_posterior_mean, <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.1</span>, <span class="at">scale_color =</span> <span class="fu">scale_color_scico</span>(<span class="at">palette =</span> <span class="st">&quot;vik&quot;</span>, <span class="at">midpoint =</span> <span class="dv">0</span>)) <span class="sc">+</span></span>
-<span id="cb4-46"><a href="#cb4-46" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="fu">expression</span>(<span class="sc">~</span>u)) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
-<span id="cb4-47"><a href="#cb4-47" tabindex="-1"></a>  <span class="fu">print</span>(p1)</span>
-<span id="cb4-48"><a href="#cb4-48" tabindex="-1"></a>  <span class="fu">dev.off</span>()</span>
-<span id="cb4-49"><a href="#cb4-49" tabindex="-1"></a></span>
-<span id="cb4-50"><a href="#cb4-50" tabindex="-1"></a>  <span class="do">#### Log-Intensity Plot ####</span></span>
-<span id="cb4-51"><a href="#cb4-51" tabindex="-1"></a>  log_lambda <span class="ot">&lt;-</span> fit_object<span class="sc">$</span>summary.linear.predictor[index, <span class="st">&quot;mean&quot;</span>]</span>
-<span id="cb4-52"><a href="#cb4-52" tabindex="-1"></a></span>
-<span id="cb4-53"><a href="#cb4-53" tabindex="-1"></a>  <span class="fu">png</span>(<span class="fu">paste0</span>(file_prefix, <span class="st">&quot;_log_intensity2.png&quot;</span>), <span class="at">height =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">700</span>, <span class="at">width =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">900</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
-<span id="cb4-54"><a href="#cb4-54" tabindex="-1"></a>  p32 <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(<span class="at">X =</span> log_lambda, <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>, <span class="at">scale_color =</span> <span class="fu">scale_color_scico</span>(<span class="at">palette =</span> <span class="st">&quot;vik&quot;</span>, <span class="at">midpoint =</span> <span class="dv">0</span>)) <span class="sc">+</span></span>
-<span id="cb4-55"><a href="#cb4-55" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="fu">expression</span>(<span class="sc">~</span> <span class="fu">log</span>(lambda))) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
-<span id="cb4-56"><a href="#cb4-56" tabindex="-1"></a>  <span class="fu">print</span>(p32)</span>
-<span id="cb4-57"><a href="#cb4-57" tabindex="-1"></a>  <span class="fu">dev.off</span>()</span>
-<span id="cb4-58"><a href="#cb4-58" tabindex="-1"></a>}</span>
-<span id="cb4-59"><a href="#cb4-59" tabindex="-1"></a><span class="fu">plot_and_save_results</span>(spde_fit1_no_repl, graph, stk1_no_repl, <span class="st">&quot;Figures/5Graph_model1_alpha1_7FRC_pruned_exact_100m&quot;</span>)</span></code></pre></div>
-<p>The model results are visualized in the following plots:</p>
-<ol style="list-style-type: decimal">
-<li><p><strong>Intensity Plot Variations</strong>:</p>
-<ul>
-<li><p>Colormap 1: vik (scico)
-<img src="Figures/5Graph_model1_alpha1_7FRC_pruned_exact_100m_intensity_vik_minimal.png" width="1350" style="display: block; margin: auto;" /></p></li>
-<li><p>Colormap 2: viridis
-<img src="Figures/5Graph_model1_alpha1_7FRC_pruned_exact_100m_intensity_viridis.png" width="1350" style="display: block; margin: auto;" /></p></li>
-<li><p>Colormap 4: plasma (viridis)
-<img src="Figures/5Graph_model1_alpha1_7FRC_pruned_exact_100m_intensity_plasma.png" width="1350" style="display: block; margin: auto;" /></p></li>
-</ul></li>
-<li><p><strong>Latent Field Plot Variations</strong>:
-<img src="Figures/5Graph_model1_alpha1_7FRC_pruned_exact_100m_posterior_u.png" width="1350" style="display: block; margin: auto;" /></p></li>
-<li><p><strong>Log-Intensity Plot</strong>:
-<img src="Figures/5Graph_model1_alpha1_7FRC_pruned_exact_100m_log_intensity2.png" width="1350" style="display: block; margin: auto;" /></p></li>
-</ol>
+<div id="session-info" class="section level2" number="2.3">
+<h2><span class="header-section-number">2.3</span> Session Info</h2>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<pre><code>## R version 4.5.1 (2025-06-13)
+## Platform: aarch64-apple-darwin20
+## Running under: macOS Sequoia 15.7.1
+## 
+## Matrix products: default
+## BLAS:   /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRblas.0.dylib 
+## LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+## 
+## locale:
+## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+## 
+## time zone: Asia/Riyadh
+## tzcode source: internal
+## 
+## attached base packages:
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+## [1] ggplot2_4.0.0          qs_0.27.3              INLA_25.10.19         
+## [4] Matrix_1.7-3           MetricGraph_1.5.0.9000
+## 
+## loaded via a namespace (and not attached):
+##  [1] gtable_0.3.6          xfun_0.54             bslib_0.9.0          
+##  [4] RApiSerialize_0.1.4   lattice_0.22-7        vctrs_0.6.5          
+##  [7] tools_4.5.1           generics_0.1.4        parallel_4.5.1       
+## [10] tibble_3.3.0          proxy_0.4-27          pkgconfig_2.0.3      
+## [13] KernSmooth_2.23-26    ggnewscale_0.5.2      RColorBrewer_1.1-3   
+## [16] S7_0.2.0              RcppParallel_5.1.11-1 lifecycle_1.0.4      
+## [19] compiler_4.5.1        farver_2.1.2          fmesher_0.5.0        
+## [22] MatrixModels_0.5-4    htmltools_0.5.8.1     class_7.3-23         
+## [25] sass_0.4.10           yaml_2.3.10           pillar_1.11.1        
+## [28] jquerylib_0.1.4       tidyr_1.3.1           classInt_0.4-11      
+## [31] cachem_1.1.0          wk_0.9.4              Deriv_4.2.0          
+## [34] tidyselect_1.2.1      digest_0.6.39         sf_1.0-23            
+## [37] dplyr_1.1.4           purrr_1.2.0           splines_4.5.1        
+## [40] fastmap_1.2.0         grid_4.5.1            cli_3.6.5            
+## [43] magrittr_2.0.4        broom_1.0.11          e1071_1.7-16         
+## [46] withr_3.0.2           scales_1.4.0          backports_1.5.0      
+## [49] sp_2.2-0              rmarkdown_2.30        igraph_2.2.1         
+## [52] RANN_2.6.2            zoo_1.8-14            png_0.1-8            
+## [55] stringfish_0.17.0     evaluate_1.0.5        knitr_1.50           
+## [58] s2_1.1.9              rlang_1.1.6           Rcpp_1.1.0           
+## [61] glue_1.8.0            DBI_1.2.3             rstudioapi_0.17.1    
+## [64] rSPDE_2.5.1.9000      jsonlite_2.0.0        R6_2.6.1             
+## [67] units_1.0-0</code></pre>
+</div>
 </div>
 
 

@@ -76,7 +76,7 @@ pre {
 }
 ```
 
-In this section, we will show how to extract the spatial covariates from the OpenStreetMap data. We will compute the distances to the nearest objects and apply transformations to them. We will use the Euclidean distance to the nearest mosque, school, bank, fuel station, and hospital. We will then apply different transformations to these distances, such as the inverse, inverse square root, logarithm, and exponential decay. 
+In this section, we extract the locations of spatial covariates from OpenStreetMap data. We collect the positions of mosques, educational institutions, hospitals, financial institutions (banks and ATMs), and road intersections within the study area. The distance computations and transformations are covered in the next section ([Computing Spatial Covariates](covariates2.html)).
 
 # Extracting the Spatial Covariates
 We will now create `additional_city_objects.RData' file that contains the spatial covariates. We will extract the following spatial covariates: mosques, education places, hospital places, finance places, and intersections. 
@@ -127,7 +127,7 @@ leaflet() %>%
   addPolygons(data = polygon, color = "red", fill = FALSE, weight = 2)
 
 # Load graph
-graph <- qread(here("Data/graph_mesh_pruned_100m_7FRC_ver2.qs"))
+graph <- qread(here("Data/graph_mesh_pruned_50m_7FRC.qs"))
 ```
 
 ## Highways and Intersections
@@ -201,7 +201,7 @@ table(points_amenity$amenity)[order(table(points_amenity$amenity), decreasing = 
 
 ## BUILDING
 tags_building <- available_tags("building")
-data_building <- opq(bb = bb) %>%
+data_building <- opq(bb = bb,timeout = 300) %>%
   add_osm_feature(key = "building") %>%
   osmdata_sf()
 
@@ -248,11 +248,11 @@ remove_duplicates_within_threshold <- function(data, threshold) {
 fetch_osm_data <- function(key, value, bb) {
   # Fetch points data and check if it exists
   data_points <- tryCatch({
-    opq(bb = bb) %>%
+    opq(bb = bb,timeout = 300) %>%
       add_osm_feature(key = key, value = value) %>%
       osmdata_sf() %>%
       .$osm_points %>%
-      filter(!is.na(!!sym(key))) %>%
+     # filter(!is.na(!!sym(key))) %>%
       select(geometry, !!sym(key))
   }, error = function(e) {
     NULL  # Return NULL if points data is not available
@@ -260,11 +260,11 @@ fetch_osm_data <- function(key, value, bb) {
 
   # Fetch polygons data and check if it exists
   data_polygons <- tryCatch({
-    opq(bb = bb) %>%
+    opq(bb = bb, timeout = 300) %>%
       add_osm_feature(key = key, value = value) %>%
       osmdata_sf() %>%
       .$osm_polygons %>%
-      filter(!is.na(!!sym(key))) %>%
+     # filter(!is.na(!!sym(key))) %>%
       select(geometry, !!sym(key))
   }, error = function(e) {
     NULL  # Return NULL if polygons data is not available
@@ -293,8 +293,8 @@ fetch_osm_data <- function(key, value, bb) {
   }
 
   # Check that only the value of interest is present
-  combined <- combined %>% filter(!!sym(key) == value)
-
+ # combined <- combined %>% filter(!!sym(key) == value)
+  combined <- combined %>% filter(!!sym(key) == value | is.na(!!sym(key)))
   unique_combined = remove_duplicates_within_threshold(combined, 100)
 
   return(unique_combined)
@@ -332,7 +332,7 @@ education = rbind(college, school, kindergarten, library, university)
 education2 = rbind(college2, school2, university2)%>% rename(amenity = building)
 education = rbind(education, education2)
 education$amenity = "education"
-education_places = remove_duplicates_within_threshold(education, 200)
+education_places = remove_duplicates_within_threshold(education, 300)
 cat("The number of unique education points is", nrow(education_places), "\n")
 graph$plot(vertex_size = 0, edge_width = 0.1) +
     geom_sf(data = education_places, aes(color = amenity)) +

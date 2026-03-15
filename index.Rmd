@@ -24,6 +24,7 @@ Use the navbar above to explore the workflow:
 - [LGCP Models](model1.html): Fit Model 1 (spatial effects) and Model 2 (spatial + covariates).
 - [Risk Analysis](exceedance.html): Compute exceedance probabilities for high-risk roads.
 - [Interactive Maps](maps.html): Visualize results spatially.
+- [Mesh Sensitivity](graph_setup.html#mesh-sensitivity): Sensitivity analysis for mesh resolution (within Graph Setup).
 
 ---
 

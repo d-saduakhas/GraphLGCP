@@ -132,15 +132,9 @@ tomtom$SpeedLimit <- round(tomtom$SpeedLimit / 10) * 10
 hist(tomtom$SpeedLimit)
 unique(tomtom$SpeedLimit)
 
-# Compute traffic density 
-compute_traffic_intensity <- function(data) {
-  data$FRC[data$FRC == 0] <- 1 # Avoid division by zero
-  data$TrafficIntensity <- (data$SpeedLimit / data$FRC) * log(data$Length) # using Chaudhuri et al. (2023) formula
-  return(data)
-}
-
-tomtom <- compute_traffic_intensity(tomtom)
-hist(tomtom$TrafficIntensity)
+# Join FRC 0 and 1 classes
+tomtom$FRC[tomtom$FRC == 0] <- 1 
+hist(tomtom$FRC)
 ```
 
 ```{r}
@@ -160,11 +154,8 @@ leaflet() %>%
 # Filter and transform TomTom data for the city center
 filter_transform_tomtom <- function(data, polygon) {
   data %>%
-    dplyr::select(Segment.Id, Length, FRC, SpeedLimit, averageSpeed, sampleSize,
-                  TrafficIntensity, geometry, "10percentile", "90percentile") %>%
-    mutate(Length_km = Length / 1000,
-           density = sampleSize / Length_km,
-           density_per_hour = density / 24) %>%
+    dplyr::select(Segment.Id, Length, FRC, SpeedLimit, geometry) %>%
+    mutate(Length_km = Length / 1000) %>%
     st_transform(crs = st_crs(data)) %>%
     st_filter(x = ., y = polygon, .predicate = st_within)
 }
@@ -172,19 +163,19 @@ filter_transform_tomtom <- function(data, polygon) {
 tomtom_sub <- filter_transform_tomtom(tomtom, polygon)
 
 # Inspect the filtered data
-str(tomtom_sub) # [178,807 × 14] graph with FRC7
+str(tomtom_sub) # [178,807 × 6] graph with FRC7
 ```
 
-We recommend to use the high-precision data, when available, to construct large-scale graphs. This will ensure fast and accurate graph construction. Given such high-precision, one can safely put the `merge_close_vertices` argument in the `graph_components$new()` to `FALSE`. This will prevent the merging of close vertices, and therefore speed up significantly the graph construction and also reduce computational memory load.
+We recommend to use the high-precision data, when available, to construct large-scale graphs. This will ensure fast and accurate graph construction. Given such high-precision, one can safely put the `merge_close_vertices` argument in the `graph_components$new()` to `FALSE`. This will prevent the merging of close vertices, and therefore speed up significantly the graph construction and also reduce computational memory load. You can view all the steps of the graph construction by setting the `verbose` argument to 1 or 2 (more detailed).
 
 ```{r, eval=FALSE, include=T}
 # New way to directly build the graph
 system.time({
-  graph = graph_components$new(edges = tomtom_sub,  merge_close_vertices = FALSE, verbose=2)
+  graph = graph_components$new(edges = tomtom_sub,  merge_close_vertices = FALSE, verbose=1)
 })
+ # user  system elapsed 
+ # 50.764   0.290  51.297
 
-# user  system elapsed 
-# 87.534   0.800  88.723 
 graph$n
 
 # Get the largest connected component
@@ -205,8 +196,8 @@ graph$get_edge_weights()
 system.time({
   graph$prune_vertices(verbose=2)
 })
-# user  system elapsed 
-# 390.751  41.643 434.038 
+#  user  system elapsed 
+# 544.501  41.383 588.785 
 
 # Save the graph object with high compression
 qsave(graph, "Data/graph_weighted_7FRC_city_center_pruned.qs", preset = "high")
@@ -227,33 +218,34 @@ graph$plot(vertex_size = 0, type = "mapview", edge_width = 0.05,edge_color = "bl
 After constructing the graph, we need to set up the mesh for the LGCP model. 
 Even though we do not use the finite element method (FEM) for approximating the the Whittle--Matérn field $u(s)$, we still need to set up the mesh for LGCP model.
 
-The mesh is built with a resolution of 100 meters. Before building the mesh, we add the data as observations to the graph to avoid placing mesh nodes too close. We also normalize the data and set a tolerance of 0.6 (600 meters) for the duplicated observations. 
+The mesh is built with a resolution of 50 meters, and we also build a coarser mesh with a resolution of 100 meters for sensitivity analysis. The parameter `h` in the `build_mesh()` function controls the mesh resolution. The value of `h` is in the same units as the graph, which is in kilometers. Therefore, `h = 0.05` corresponds to a mesh resolution of 50 meters.
 
 ```{r, eval=FALSE}
-# Build and setup mesh for graph
-build_mesh <- function(graph, h = 0.1) {
-  graph$build_mesh(h=h)
-  graph$compute_fem()
-}
-
 # Load graph and build mesh
 setup_graph_mesh <- function() {
   graph <- qread("Data/graph_weighted_7FRC_city_center_pruned.qs")
-  data <- qread("Data/data_all_reasons_with_distances_7FRC.qs")
-  
-  # Add as observation to avoid placing mesh nodes too close
-  rem.obs <- graph$add_observations(data, normalized = TRUE, tolerance = 0.6,clear_obs = TRUE,
-                                    duplicated_strategy = "jitter")
-  graph$observation_to_vertex(verbose = 1)
-  build_mesh(graph)
-  qsave(graph, "Data/graph_mesh_pruned_100m_7FRC_ver2.qs")
-}
+  graph$build_mesh(h=0.05)
+  qsave(graph, "Data/graph_mesh_pruned_50m_7FRC.qs")
+  }
 system.time({
   setup_graph_mesh()
 })
-# user  system elapsed 
-# 896.174   9.031 905.481 
-
+ #  user  system elapsed 
+ # 54.089  11.074  65.385 
 ```
 
 The graph is now ready for the LGCP model fitting. The additional step is to prepare the spatial covariates for the LGCP model. We will cover this in the next section. If you are interested in the LGCP model fitting without covariates, please refer to the [Model 1](model1.html) page.
+
+### Mesh sensitivity
+
+The mesh resolution is an important factor in the LGCP model fitting. It is worth clarifying what the mesh is used for. Recall that the log-likelihood of the LGCP model involves two components: (i) the integral $\int_\Gamma \lambda(s) \, ds$, which is approximated numerically using a mid-point rule with integration weights $\tilde{a}_i$ at mesh nodes, and (ii) the evaluation of the intensity $\lambda(s_i)$ at each observed point location. The Whittle--Matérn field $u(s)$ is evaluated **exactly** at all locations (both mesh nodes and observation points) via its Markov properties --- no finite element approximation of the field is needed. Therefore, the mesh controls the accuracy of the numerical integration only, not the approximation of the Gaussian field itself. The spatial covariates, however, must also be available at each mesh node, so the mesh resolution also determines at what spatial resolution the covariates enter the model.
+
+The mesh resolution can be adjusted by changing the `h` parameter in the `build_mesh()` function. The value of `h` is in the same units as the graph coordinates. In our case, the graph units are in kilometers, so `h = 0.05` corresponds to a mesh resolution of 50 meters.
+
+To assess the sensitivity of the posterior results to the choice of mesh, we conducted a simulation study on the application graph. We simulated log-Gaussian Cox processes with an intercept and one covariate under two parameter settings: (i) $\kappa = \tau = 0.5$, and (ii) $\kappa = 0.33, \tau = 0.61$. The latent field was generated on a fine 10 m mesh, treated as ground truth. For each setting, we generated multiple replicates and estimated the model using meshes with resolutions $h \in \{200, 100, 50, 25\}$ meters.
+
+```{r, eval=TRUE, echo=FALSE, fig.cap="Mesh sensitivity analysis for LGCP parameter recovery. Posterior mean estimates ($\\pm$95% CI) of the SPDE parameters κ and τ for mesh resolutions from 200 m to 25 m. Dashed lines indicate true simulation values. Top row: κ = τ = 0.5. Bottom row: κ = 0.33, τ = 0.61. Parameter estimates converge toward true values as mesh resolution increases, with h = 50 m achieving acceptable accuracy."}
+knitr::include_graphics("Figures/mesh_sensitivity_combined_clean.png")
+```
+
+At coarse resolutions ($h = 200$ m), parameter estimates exhibit substantial bias (approximately 50--70% relative error in $\kappa$). At $h = 100$ m, estimates approach the true values with relative errors of approximately 10--15%. At $h = 50$ m, recovery is near-perfect (< 5% relative error). Based on these findings, we adopt $h = 50$ m for the application as it provides adequate accuracy while remaining computationally tractable. That said, $h = 100$ m is still a reasonable choice for this graph if computational resources are limited.

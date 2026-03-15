@@ -16,21 +16,21 @@ always_allow_html: true
 ---
 ```{r  setup, include=FALSE}
 # Set seed for reproducibility
-set.seed(42) 
+set.seed(42)
 # Set global options for all code chunks
 knitr::opts_chunk$set(
   # Disable messages printed by R code chunks
-  message = FALSE,    
+  message = FALSE,
   # Disable warnings printed by R code chunks
-  warning = FALSE,    
+  warning = FALSE,
   # Show R code within code chunks in output
-  echo = TRUE,        
+  echo = TRUE,
   # Include both R code and its results in output
-  include = TRUE,     
+  include = TRUE,
   # Evaluate R code chunks
-  eval = FALSE,       
+  eval = TRUE,
   # Enable caching of R code chunks for faster rendering
-  cache = FALSE,      
+  cache = FALSE,
   # Align figures in the center of the output
   fig.align = "center",
   # Enable retina display for high-resolution figures
@@ -75,12 +75,16 @@ pre {
 }
 ```
 
-In this section, we fit **Model 1** as described in the paper. This model includes only spatial effects, without any covariates. 
+In this section, we fit **Model 1** as described in the paper. This model includes only spatial effects, without any covariates. We show two fitting strategies:
+
+-   **`lgcp_graph` wrapper** (our convenient interface, recommended)
+-   **Manual INLA** (standard INLA workflow on the metric graph, for advanced users)
+
+We use a mesh with edge-wise spacing of **50 meters** — this is the configuration reported in the paper.
 
 ## Data Loading and Graph Preparation
 
 This part loads the required libraries, reads the data and graph files, and builds a mesh using the graph structure. The operations prepare the spatial framework needed for the subsequent modeling steps.
-
 
 ```{r}
 library(MetricGraph)
@@ -90,223 +94,252 @@ library(ggplot2)
 
 # Load Graph
 data <- qread("Data/data_all_reasons_with_distances_7FRC.qs")
-graph <- qread("Data/graph_mesh_pruned_100m_7FRC_ver2.qs")
+graph <- qread("Data/graph_mesh_pruned_50m_7FRC.qs")
 
 summary(graph)
-
-# Note that this graph already has the observation to vertex
-graph$build_mesh(h = 0.1)
-
-# Extract the data
-ss <- graph$get_data()
-dat <- ss
-ind.dat <- graph$PtV
-
-graph$clear_observations()
-system.time(graph$compute_fem())
-
-n_accidents <- sum(!is.na(ss$AccidentSeverityId)) # 2482 - total number of accidents
 ```
+
+# Fitting with `lgcp_graph` wrapper (50 m mesh)
+
+The `lgcp_graph` wrapper is the recommended way to fit LGCP models on metric graphs. It internally handles the integration weights, the INLA data stack, and the exposure variable `E`, simplifying the workflow considerably. We only need to add the observed events, provide covariates at mesh locations, and specify the model formula.
+
+```{r}
+graph$compute_mesh_weights()
+
+# Add observations to extract locations
+rem.obs <- graph$add_observations(
+  data, normalized = TRUE, tolerance = 0.6, clear_obs = TRUE,
+  duplicated_strategy = "jitter"
+)
+
+# Extract prepared data and count events
+ss <- graph$get_data()
+n_accidents <- sum(!is.na(ss$AccidentSeverityId))
+
+# Reset observations to contain only the events (wrapper computes exposures, INLA stack, data internally)
+graph$clear_observations()
+
+obs_50 <- data.frame(
+  y = rep(1, n_accidents),
+  edge_number = ss$.edge_number,
+  distance_on_edge = ss$.distance_on_edge,
+  Intercept = 1,
+  .group = 1
+)
+
+graph$add_observations(data = obs_50, normalized = TRUE)
+
+# Provide a manual covariate that is constant along edges (intercept)
+manual_cov_50 <- data.frame(
+  Intercept = rep(1, nrow(graph$mesh$VtE)),
+  edge_number = graph$mesh$VtE[, 1],
+  distance_on_edge = graph$mesh$VtE[, 2],
+  .group = 1,
+  coord_x = graph$mesh$V[,1],
+  coord_y = graph$mesh$V[,2]
+)
+
+# Build the SPDE model object (used by the wrapper in the formula)
+model_iface_50 <- graph_spde(graph, alpha = 1, parameterization = "spde", LGCP = TRUE)
+
+# Wrapper fit on the 50 m mesh
+system.time(fit_iface_50 <- lgcp_graph(
+  y ~ -1 + Intercept + f(field, model = model_iface_50),
+  graph = graph,
+  manual_covariates = manual_cov_50,
+  interpolate = FALSE,
+  use_current_mesh = TRUE,
+  control.compute = list(config = TRUE, waic = TRUE),
+  control.fixed   = list(prec = list(Intercept = 0)),
+  control.inla    = list(control.vb = list(enable = FALSE), int.strategy = "eb")
+))
+summary(fit_iface_50)
+spde_iface_50 <- spde_metric_graph_result(fit_iface_50, "field", model_iface_50)
+
+result_df_iface_50 <- data.frame(
+  parameter = c("kappa", "tau"),
+  mean = c(spde_iface_50$summary.kappa$mean, spde_iface_50$summary.tau$mean),
+  lower = c(spde_iface_50$summary.kappa$"0.025quant", spde_iface_50$summary.tau$"0.025quant"),
+  upper = c(spde_iface_50$summary.kappa$"0.975quant", spde_iface_50$summary.tau$"0.975quant"),
+  mode = c(spde_iface_50$summary.kappa$mode, spde_iface_50$summary.tau$mode)
+)
+
+print(result_df_iface_50)
+
+# Save workspace snapshot for the 50 m mesh
+save.image("Data/5Fit_model1_alpha1_exact_50m_upd.RData")
+```
+
+## Visualizing Model Results
+
+When fitting with `lgcp_graph`, the returned object includes a `graph_fitted_data` data frame containing predictions at both observation and integration locations. We can plot the three key outputs directly using `graph$plot_function`:
+
+- **Linear predictor**: posterior mean of the linear predictor
+- **Predicted field**: posterior mean of the latent Gaussian field $u(s)$
+- **Log fitted values**: log of the predicted intensity
+
+```{r, eval=FALSE}
+library(scico)
+library(ggplot2)
+library(viridis)
+
+# Posterior mean of the log-intensity (linear predictor)
+png("Figures/model1_linear_predictor.png", height = 3 * 700, width = 3 * 900, res = 300)
+p1 <- graph$plot_function(data = ".linear_predictor", newdata = fit_iface_50$graph_fitted_data,
+                    vertex_size = 0, edge_width = 0.2, scale_color = scale_color_scico(palette = "vik", midpoint = 0)) + theme_minimal()
+print(p1)
+dev.off()
+
+# Posterior mean of the latent field u(s)
+png("Figures/model1_predicted_field.png", height = 3 * 700, width = 3 * 900, res = 300)
+p2 <- graph$plot_function(data = ".predicted_field", newdata = fit_iface_50$graph_fitted_data,
+                    vertex_size = 0, edge_width = 0.2, scale_color = scale_color_scico(palette = "vik", midpoint = 0)) + theme_minimal()
+print(p2)
+dev.off()
+
+# Log of fitted values (log-intensity)
+fit_iface_50$graph_fitted_data$.log_fitted_values <- log(fit_iface_50$graph_fitted_data$.fitted_values)
+png("Figures/model1_log_fitted_values.png", height = 3 * 700, width = 3 * 900, res = 300)
+p3 <- graph$plot_function(data = ".log_fitted_values", newdata = fit_iface_50$graph_fitted_data,
+                    vertex_size = 0, edge_width = 0.2, scale_color = scale_color_scico(palette = "vik", midpoint = 0)) + theme_minimal()
+print(p3)
+dev.off()
+```
+
+1. **Linear predictor**:
+```{r, eval=TRUE, echo=FALSE}
+knitr::include_graphics("Figures/model1_linear_predictor.png")
+```
+
+2. **Predicted field** $u(s)$:
+```{r, eval=TRUE, echo=FALSE}
+knitr::include_graphics("Figures/model1_predicted_field.png")
+```
+
+3. **Log fitted values**:
+```{r, eval=TRUE, echo=FALSE}
+knitr::include_graphics("Figures/model1_log_fitted_values.png")
+```
+
+
+# Alternative: Manual INLA workflow (50 m mesh)
+
+For users who want full control over the INLA stack and data preparation, we show here the equivalent manual workflow. This approach requires explicitly constructing the integration points, building the INLA stack, and passing the exposure variable `E` to `inla()`.
 
 ## Preparing the Spatial Observations
 
-Before fitting the model, we prepare the spatial observations by defining integration points and associating them with the mesh. This segmentation allows the model to differentiate between observed locations and additional integration nodes.
+Before fitting the model, we prepare the spatial observations by defining integration points and associating them with the mesh. This segmentation allows the model to differentiate between observed locations and additional integration nodes. The `e` field holds integration weights.
 
 ```{r}
 alpha <- 1
 atilde <- graph$mesh$weights
 
-# These are the indices of the mesh nodes which are not observation locations
-ind.add <- setdiff(1:length(atilde), ind.dat)
+# Clear and add observations explicitly for modeling
+graph$clear_observations()
 
-# Add the locations which are observed
+# Add the observed accidents
 graph$add_observations(
   data = data.frame(
-    y = rep(1, length(ind.dat)),
-    e = atilde[ind.dat],
-    edge_number = dat$.edge_number,
-    distance_on_edge = dat$.distance_on_edge
+    y = rep(1, n_accidents),
+    e = 0,
+    edge_number = ss$.edge_number,
+    distance_on_edge = ss$.distance_on_edge,
+    Intercept = 1
   ),
   normalized = TRUE
 )
 
-# Add the remaining integration points
+# Add integration points
 graph$add_observations(
   data = data.frame(
-    y = rep(0, length(ind.add)),
-    e = atilde[ind.add],
-    edge_number = graph$mesh$VtE[ind.add, 1],
-    distance_on_edge = graph$mesh$VtE[ind.add, 2]
+    y = rep(0, length(atilde)),
+    e = atilde,
+    edge_number = graph$mesh$VtE[, 1],
+    distance_on_edge = graph$mesh$VtE[, 2],
+    Intercept = 1
   ),
   normalized = TRUE
 )
 ```
-## Creating the Spatial Model
 
-Here we build the `graph_spde` model using the prepared spatial data. The subsequent code stacks the data and fits a log-Gaussian Cox process without covariates. You can choose between 2 different parameterizations: "spde" or "matern". We will use the "spde" parameterization in this example. In case if you want to use the "matern" parameterization, you can change the parameterization argument in the `graph_spde` function and use the code snippet provided in the comments to convert back to "spde" parameterization.
+## Creating the spatial model (Manual INLA on 50 m mesh)
 
-```{r}
-# Create the Graph_SPDE model
-# Parametrization can either be "spde" or "matern"
-system.time(spde_model1 <- graph_spde(graph, alpha = alpha, parameterization = "spde", verbose = 1))
-data_spde <- graph_data_spde(graph_spde = spde_model1, name = "field")
+We build the SPDE model on the graph, construct the INLA stack, and fit the log-Gaussian Cox process without covariates. We use the **"spde"** parameterization. (If switching to **"matern"**, see the commented snippet for converting to SPDE parameters.)
 
-stk1_no_repl <- inla.stack(
-  data = data_spde[["data"]],
-  A = data_spde[["basis"]],
-  effects = c(
-    data_spde[["index"]],
-    list(Intercept = 1)
-  ),
-  tag = "data"
+```{r fit_manual_50}
+# Create the Graph SPDE model (spde parameterization)
+system.time(
+  model_manual_50 <- graph_spde(graph, alpha = alpha, parameterization = "spde", verbose = 1)
+)
+# user  system elapsed
+# 523.109 183.495 712.815
+qsave(model_manual_50, "Data/model1_graph_spde_50m_7FRC.qs")
+
+# Build the INLA stack for Manual INLA
+data_manual_50 <- graph_data_spde(graph_spde = model_manual_50, name = "field", covariates = c("Intercept"))
+qsave(data_manual_50, "Data/model1_graph_data_spde_50m_7FRC.qs")
+
+stk_50 <- inla.stack(
+  data    = data_manual_50[["data"]],
+  A       = data_manual_50[["basis"]],
+  effects = data_manual_50[["index"]]
 )
 
-spde_fit1_no_repl <- inla(y ~ -1 + Intercept + f(field, model = spde_model1),
-  family = "poisson", data = inla.stack.data(stk1_no_repl),
-  control.predictor = list(A = inla.stack.A(stk1_no_repl)),
-  control.compute = list(config = TRUE), # Necessary for the computation of the excursion sets
-  E = inla.stack.data(stk1_no_repl)$e
+# Manual INLA fit on the 50 m mesh
+fit_manual_50 <- inla(
+  y ~ -1 + Intercept + f(field, model = model_manual_50),
+  family = "poisson",
+  data = inla.stack.data(stk_50),
+  control.predictor = list(A = inla.stack.A(stk_50), compute = TRUE, link = 1),
+  control.compute   = list(config = TRUE, waic = TRUE),  # needed for excursion sets
+  control.fixed     = list(prec = list(Intercept = 0)),  # manual intercept - default prior correction
+  control.inla      = list(control.vb = list(enable = FALSE), int.strategy = "eb"),
+  E = inla.stack.data(stk_50)$e
 )
+summary(fit_manual_50)
 
-spde_result <- spde_metric_graph_result(spde_fit1_no_repl, "field", spde_model1)
-
-alpha <- 1
-nu <- alpha - 0.5
-kappa <- sqrt(8 * nu) / range
-tau <- sqrt(gamma(nu) / (sigma^2 * gamma(alpha) * sqrt(4 * pi) * kappa^(2 * nu)))
+# Summaries of hyperparameters (SPDE)
+spde_manual_50 <- spde_metric_graph_result(fit_manual_50, "field", model_manual_50)
 
 # For "spde" parameterization
-result_df <- data.frame(
+result_df_manual_50 <- data.frame(
   parameter = c("kappa", "tau"),
-  mean = c(
-    spde_result$summary.kappa$mean,
-    spde_result$summary.tau$mean
-  ),
-  mode = c(
-    spde_result$summary.kappa$mode,
-    spde_result$summary.tau$mode
-  )
+  mean = c(spde_manual_50$summary.kappa$mean, spde_manual_50$summary.tau$mean),
+  lower = c(spde_manual_50$summary.kappa$"0.025quant", spde_manual_50$summary.tau$"0.025quant"),
+  upper = c(spde_manual_50$summary.kappa$"0.975quant", spde_manual_50$summary.tau$"0.975quant"),
+  mode = c(spde_manual_50$summary.kappa$mode, spde_manual_50$summary.tau$mode)
 )
-print(result_df)
+print(result_df_manual_50)
 
+# # If using "matern" parameterization, you may convert to (kappa, tau) via:
+# alpha <- 1; nu <- alpha - 0.5
+# kappa <- sqrt(8 * nu) / range
+# tau   <- sqrt(gamma(nu) / (sigma^2 * gamma(alpha) * sqrt(4 * pi) * kappa^(2 * nu)))
+# # For "matern" parameterization
+# result_df <- data.frame(
+#   parameter = c("sigma", "range"),
+#   rspde_version = c(sigma, range),
+#   mean_exact = c(
+#     spde_result$summary.sigma$mean,
+#     spde_result$summary.range$mean
+#   ),
+#   mode_exact = c(
+#     spde_result$summary.sigma$mode,
+#     spde_result$summary.range$mode
+#   )
+# )
+# print(result_df)
 
-# For "matern" parameterization
-result_df <- data.frame(
-  parameter = c("sigma", "range"),
-  rspde_version = c(sigma, range),
-  mean_exact = c(
-    spde_result$summary.sigma$mean,
-    spde_result$summary.range$mean
-  ),
-  mode_exact = c(
-    spde_result$summary.sigma$mode,
-    spde_result$summary.range$mode
-  )
-)
-print(result_df)
-
-# Plotting the posterior distribution of the parameters
-posterior_df_fit <- gg_df(spde_result)
-ggplot(posterior_df_fit) +
-  geom_line(aes(x = x, y = y)) +
-  facet_wrap(~parameter, scales = "free") +
-  labs(y = "Density")
-save.image("Data/5Fit_model1_alpha1_exact_100m.RData")
+# Optional: posterior density plot
+# posterior_df_fit_50 <- gg_df(spde_manual_50)
+# ggplot(posterior_df_fit_50) +
+#   geom_line(aes(x = x, y = y)) +
+#   facet_wrap(~parameter, scales = "free") +
+#   labs(y = "Density")
 ```
 
-## Visualizing Model Results
+## Session Info
 
-The final section extracts and visualizes the model's predictions, including the intensity and latent field. Several plotting styles are applied, and the plots are saved as image files for further review.
 ```{r}
-###### Extracting results ######
-# summary.random - contains the posterior mean of the unstructured random effect, u(s)
-# summary.fitted.values - contains the predicted intensity (mean number of events per unit area), lambda
-# summary.linear.predictor - contains the posterior mean of the linear predictor, log(lambda)
-
-library(scico)
-library(gridExtra)
-library(ggplot2)
-library(gridExtra)
-library(viridis)
-# Function to plot and save results
-plot_and_save_results <- function(fit_object, graph, stk, file_prefix) {
-  # Extracting intensity results
-  index <- inla.stack.index(stk, tag = "data")$effect
-  lambda_mean <- fit_object$summary.fitted.values[index, "mean"]
-
-  #### Intensity Plot Variations ####
-
-  # Colormap 1: vik with white background (scico + theme_minimal)
-  png(paste0(file_prefix, "_intensity_vik_minimal.png"), height = 3 * 700, width = 3 * 900, res = 300)
-  p_vik_minimal <- graph$plot_function(X = exp(lambda_mean), vertex_size = 0, edge_width = 0.2, scale_color = scale_color_scico(palette = "vik", midpoint = 0, begin = 0.1)) +
-    ggtitle(expression(paste(lambda, ", intensity"))) +
-    theme_minimal()
-  print(p_vik_minimal)
-  dev.off()
-
-  # Colormap 2: viridis
-  png(paste0(file_prefix, "_intensity_viridis.png"), height = 3 * 700, width = 3 * 900, res = 300)
-  p_viridis <- graph$plot_function(X = exp(lambda_mean), vertex_size = 0, edge_width = 0.2, scale_color = scale_color_viridis(option = "D", direction = 1)) +
-    ggtitle(expression(paste(lambda, ", intensity"))) + theme_minimal()
-  print(p_viridis)
-  dev.off()
-
-  # Colormap 4: plasma (viridis)
-  png(paste0(file_prefix, "_intensity_plasma.png"), height = 3 * 700, width = 3 * 900, res = 300)
-  p_plasma <- graph$plot_function(X = exp(lambda_mean), vertex_size = 0, edge_width = 0.2, scale_color = scale_color_viridis(option = "plasma", direction = 1)) +
-    ggtitle(expression(paste(lambda, ", intensity"))) + theme_minimal()
-  print(p_plasma)
-  dev.off()
-
-  #### Latent Field Plot Variations ####
-  u_posterior_mean <- fit_object$summary.random$field[["mean"]]
-
-  png(paste0(file_prefix, "_posterior_u.png"), height = 3 * 700, width = 3 * 900, res = 300)
-  p1 <- graph$plot_function(X = u_posterior_mean, vertex_size = 0, edge_width = 0.1, scale_color = scale_color_scico(palette = "vik", midpoint = 0)) +
-    ggtitle(expression(~u)) + theme_minimal()
-  print(p1)
-  dev.off()
-
-  #### Log-Intensity Plot ####
-  log_lambda <- fit_object$summary.linear.predictor[index, "mean"]
-
-  png(paste0(file_prefix, "_log_intensity2.png"), height = 3 * 700, width = 3 * 900, res = 300)
-  p32 <- graph$plot_function(X = log_lambda, vertex_size = 0, edge_width = 0.2, scale_color = scale_color_scico(palette = "vik", midpoint = 0)) +
-    ggtitle(expression(~ log(lambda))) + theme_minimal()
-  print(p32)
-  dev.off()
-}
-plot_and_save_results(spde_fit1_no_repl, graph, stk1_no_repl, "Figures/5Graph_model1_alpha1_7FRC_pruned_exact_100m")
-
+sessionInfo()
 ```
-
-
-The model results are visualized in the following plots:
-
-1. **Intensity Plot Variations**:
-   - Colormap 1: vik (scico)
-```{r, eval=TRUE, echo=FALSE}
- knitr::include_graphics("Figures/5Graph_model1_alpha1_7FRC_pruned_exact_100m_intensity_vik_minimal.png")
-```
-
-   - Colormap 2: viridis
-```{r, eval=TRUE, echo=FALSE}
- knitr::include_graphics("Figures/5Graph_model1_alpha1_7FRC_pruned_exact_100m_intensity_viridis.png")
-```   
-
-   - Colormap 4: plasma (viridis)
-```{r, eval=TRUE, echo=FALSE}
- knitr::include_graphics("Figures/5Graph_model1_alpha1_7FRC_pruned_exact_100m_intensity_plasma.png")
-```    
-
-2. **Latent Field Plot Variations**:
-```{r, eval=TRUE, echo=FALSE}
- knitr::include_graphics("Figures/5Graph_model1_alpha1_7FRC_pruned_exact_100m_posterior_u.png")
-```  
-
-3. **Log-Intensity Plot**:
-```{r, eval=TRUE, echo=FALSE}
- knitr::include_graphics("Figures/5Graph_model1_alpha1_7FRC_pruned_exact_100m_log_intensity2.png")
-```  
-
-
