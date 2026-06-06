@@ -13,7 +13,7 @@
 
 <title>Model 2</title>
 
-<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.31/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
@@ -57,8 +57,9 @@
   }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -69,7 +70,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -553,28 +554,27 @@ number="1">
 Preparation</h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(MetricGraph)</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(INLA)</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">library</span>(qs)</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="co"># Load data, graph, and precomputed mesh covariates</span></span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;Data/data_all_reasons_with_distances_7FRC.qs&quot;</span>)</span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>graph <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;Data/graph_mesh_pruned_50m_7FRC.qs&quot;</span>)</span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>mesh_covariates <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;Data/mesh_locations_pruned_50m_with_distances_7FRC.qs&quot;</span>)</span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="fu">summary</span>(graph)</span></code></pre></div>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="co"># Load data, graph, and precomputed mesh covariates</span></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">&quot;Data/data_all_reasons_with_distances_7FRC.rds&quot;</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>graph <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">&quot;Data/graph_mesh_pruned_50m_7FRC.rds&quot;</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>mesh_covariates <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">&quot;Data/mesh_locations_pruned_50m_with_distances_7FRC.rds&quot;</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="fu">summary</span>(graph)</span></code></pre></div>
 <pre><code>## A metric graph object with:
 ## 
 ## Vertices:
-##   Total: 67223 
-##   Degree 1: 15;  Degree 2: 6287;  Degree 3: 6002;  Degree 4: 18062;  Degree 5: 1624; 
+##   Total: 67221 
+##   Degree 1: 15;  Degree 2: 6285;  Degree 3: 6002;  Degree 4: 18062;  Degree 5: 1624; 
 ##   Degree 6: 31762;  Degree 7: 147;  Degree 8: 3316;  Degree 10: 8; 
-##   With incompatible directions:  7 
+##   With incompatible directions:  925 
 ## 
 ## Edges: 
-##   Total: 164586 
+##   Total: 164584 
 ##   Lengths: 
-##       Min: 0.002991921  ; Max: 13.24092  ; Total: 15438.28 
+##       Min: 0.002995733  ; Max: 13.26332  ; Total: 15454.57 
 ##   Weights: 
 ##       Columns: FRC SpeedLimit .weights 
 ##   That are circles:  0 
@@ -593,7 +593,7 @@ Preparation</h2>
 ##   Resistance distances:  FALSE  ; Finite element matrices:  FALSE 
 ## 
 ## Mesh: 
-##   Max h_e:  0.0499999  ; Min n_e:  0 
+##   Max h_e:  0.04999975  ; Min n_e:  0 
 ## 
 ## Data: The graph has no data!
 ## 
@@ -703,7 +703,7 @@ Analysis</h2>
 <p>Before fitting, we check correlations among covariates to detect
 multicollinearity. We excluded mosques due to high correlation with
 other distance covariates.</p>
-<p><img src="Figures/New_5Graph_model2_alpha1_7FRC_pruned_exact_50m_correlation_plot.png" width="1350" style="display: block; margin: auto;" /></p>
+<p><img src="Figures/New_5Graph_model2_alpha1_7FRC_pruned_exact_50m_correlation_plot.png" alt="" width="1350" style="display: block; margin: auto;" /></p>
 </div>
 <div id="adding-observations-and-mesh-covariates" class="section level2"
 number="7">
@@ -734,7 +734,7 @@ integration weights internally.</p>
 <span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a>    <span class="at">edge_number =</span> data_on_graph<span class="sc">$</span>.edge_number,</span>
 <span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>    <span class="at">distance_on_edge =</span> data_on_graph<span class="sc">$</span>.distance_on_edge</span>
 <span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>  ),</span>
-<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a>  <span class="at">normalized =</span> <span class="cn">TRUE</span></span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a>  <span class="at">normalized =</span> <span class="cn">TRUE</span>, <span class="at">duplicated_strategy =</span> <span class="st">&quot;jitter&quot;</span></span>
 <span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>)</span>
 <span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a></span>
 <span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a><span class="co"># Covariates at mesh locations (for integration)</span></span>
@@ -764,42 +764,47 @@ integration weights internally.</p>
 wrapper. The formula includes the intercept, speed limit, FRC categories
 (1–6, with FRC7 as reference), log-distances to amenities, and the
 Whittle–Matérn field.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>spde_model <span class="ot">&lt;-</span> <span class="fu">graph_spde</span>(graph, <span class="at">alpha =</span> <span class="dv">1</span>, <span class="at">LGCP =</span> <span class="cn">TRUE</span>, <span class="at">parameterization =</span> <span class="st">&quot;spde&quot;</span>)</span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="fu">system.time</span>(fit_model2 <span class="ot">&lt;-</span> <span class="fu">lgcp_graph</span>(</span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>  y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> speed_limit <span class="sc">+</span></span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>    road_type1 <span class="sc">+</span> road_type2 <span class="sc">+</span> road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
-<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>    log_dist_education <span class="sc">+</span> log_dist_hospital <span class="sc">+</span> log_dist_finance <span class="sc">+</span> log_dist_intersection <span class="sc">+</span></span>
-<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>    <span class="fu">f</span>(field, <span class="at">model =</span> spde_model),</span>
-<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>  <span class="at">graph =</span> graph,</span>
-<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>  <span class="at">manual_covariates =</span> manual_cov,</span>
-<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>  <span class="at">interpolate =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>  <span class="at">use_current_mesh =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>, <span class="at">waic =</span> <span class="cn">TRUE</span>, <span class="at">dic =</span> <span class="cn">TRUE</span>, <span class="at">cpo =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>  <span class="at">control.fixed =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">Intercept =</span> <span class="dv">0</span>, <span class="at">speed_limit =</span> <span class="dv">0</span>,</span>
-<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>                                    <span class="at">road_type1 =</span> <span class="dv">0</span>, <span class="at">road_type2 =</span> <span class="dv">0</span>, <span class="at">road_type3 =</span> <span class="dv">0</span>,</span>
-<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>                                    <span class="at">road_type4 =</span> <span class="dv">0</span>, <span class="at">road_type5 =</span> <span class="dv">0</span>, <span class="at">road_type6 =</span> <span class="dv">0</span>)),</span>
-<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>  <span class="at">control.inla =</span> <span class="fu">list</span>(<span class="at">control.vb =</span> <span class="fu">list</span>(<span class="at">enable =</span> <span class="cn">FALSE</span>), <span class="at">int.strategy =</span> <span class="st">&quot;eb&quot;</span>)</span>
-<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>))</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>spde_model <span class="ot">&lt;-</span> <span class="fu">graph_spde</span>(graph, <span class="at">alpha =</span> <span class="dv">1</span>, <span class="at">LGCP =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>                         <span class="at">parameterization =</span> <span class="st">&quot;spde&quot;</span>, <span class="at">shared_lib=</span><span class="st">&quot;rSPDE&quot;</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="fu">system.time</span>(fit_model2 <span class="ot">&lt;-</span> <span class="fu">lgcp_graph</span>(</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  y <span class="sc">~</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">+</span> Intercept <span class="sc">+</span> speed_limit <span class="sc">+</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>    road_type1 <span class="sc">+</span> road_type2 <span class="sc">+</span> road_type3 <span class="sc">+</span> road_type4 <span class="sc">+</span> road_type5 <span class="sc">+</span> road_type6 <span class="sc">+</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>    log_dist_education <span class="sc">+</span> log_dist_hospital <span class="sc">+</span> log_dist_finance <span class="sc">+</span> log_dist_intersection <span class="sc">+</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>    <span class="fu">f</span>(field, <span class="at">model =</span> spde_model),</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>  <span class="at">graph =</span> graph,</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>  <span class="at">manual_covariates =</span> manual_cov,</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>  <span class="at">interpolate =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>  <span class="at">use_current_mesh =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>  <span class="at">control.compute =</span> <span class="fu">list</span>(<span class="at">config =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>  <span class="at">control.fixed =</span> <span class="fu">list</span>(<span class="at">prec =</span> <span class="fu">list</span>(<span class="at">Intercept =</span> <span class="dv">0</span>, <span class="at">speed_limit =</span> <span class="dv">0</span>,</span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>                                    <span class="at">road_type1 =</span> <span class="dv">0</span>, <span class="at">road_type2 =</span> <span class="dv">0</span>, <span class="at">road_type3 =</span> <span class="dv">0</span>,</span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>                                    <span class="at">road_type4 =</span> <span class="dv">0</span>, <span class="at">road_type5 =</span> <span class="dv">0</span>, <span class="at">road_type6 =</span> <span class="dv">0</span>)),</span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>  <span class="at">control.inla =</span> <span class="fu">list</span>(<span class="at">control.vb =</span> <span class="fu">list</span>(<span class="at">enable =</span> <span class="cn">FALSE</span>), <span class="at">int.strategy =</span> <span class="st">&quot;eb&quot;</span>)</span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a>))</span></code></pre></div>
 <pre><code>##    user  system elapsed 
-## 730.584 208.596 892.221</code></pre>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">summary</span>(fit_model2)</span></code></pre></div>
+## 213.105   4.744 163.277</code></pre>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="co">#    user  system elapsed </span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="co"># 199.102   4.405 158.070 </span></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="co"># Time used:</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="co">#     Pre = 4.29, Running = 66.5, Post = 11.9, Total = 82.7 </span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="fu">summary</span>(fit_model2)</span></code></pre></div>
 <pre><code>## Time used:
-##     Pre = 7.25, Running = 64.1, Post = 11.6, Total = 83 
+##     Pre = 2.17, Running = 62.4, Post = 12, Total = 76.6 
 ## Fixed effects:
 ##                         mean    sd 0.025quant 0.5quant 0.975quant   mode kld
-## Intercept              0.136 0.469     -0.784    0.136      1.056  0.136   0
-## speed_limit            1.375 0.180      1.023    1.375      1.727  1.375   0
-## road_type1             2.125 0.249      1.638    2.125      2.612  2.125   0
-## road_type2             2.905 0.129      2.651    2.905      3.158  2.905   0
-## road_type3             2.847 0.091      2.668    2.847      3.026  2.847   0
-## road_type4             2.579 0.098      2.387    2.579      2.772  2.579   0
-## road_type5             2.492 0.079      2.338    2.492      2.647  2.492   0
-## road_type6             1.729 0.075      1.582    1.729      1.875  1.729   0
-## log_dist_education    -0.486 0.444     -1.355   -0.486      0.383 -0.486   0
-## log_dist_hospital     -1.374 0.382     -2.122   -1.374     -0.625 -1.374   0
-## log_dist_finance      -1.358 0.317     -1.980   -1.358     -0.736 -1.358   0
-## log_dist_intersection -1.553 0.379     -2.295   -1.553     -0.811 -1.553   0
+## Intercept             -0.204 0.429     -1.045   -0.204      0.636 -0.204   0
+## speed_limit            1.372 0.179      1.021    1.372      1.723  1.372   0
+## road_type1             2.153 0.249      1.665    2.153      2.641  2.153   0
+## road_type2             2.936 0.130      2.682    2.936      3.191  2.936   0
+## road_type3             2.872 0.091      2.693    2.872      3.051  2.872   0
+## road_type4             2.609 0.098      2.417    2.609      2.802  2.609   0
+## road_type5             2.518 0.079      2.363    2.518      2.672  2.518   0
+## road_type6             1.741 0.075      1.595    1.741      1.887  1.741   0
+## log_dist_education    -0.442 0.441     -1.306   -0.442      0.422 -0.442   0
+## log_dist_hospital     -1.295 0.367     -2.014   -1.295     -0.576 -1.295   0
+## log_dist_finance      -1.388 0.320     -2.015   -1.388     -0.761 -1.388   0
+## log_dist_intersection -1.271 0.346     -1.950   -1.271     -0.593 -1.271   0
 ## 
 ## Random effects:
 ##   Name     Model
@@ -807,18 +812,11 @@ Whittle–Matérn field.</p>
 ## 
 ## Model hyperparameters:
 ##                    mean    sd 0.025quant 0.5quant 0.975quant   mode
-## Theta1 for field  0.789 0.058      0.671    0.789      0.901  0.793
-## Theta2 for field -1.820 0.306     -2.453   -1.810     -1.249 -1.765
+## Theta1 for field  0.795 0.058      0.677    0.795      0.907  0.799
+## Theta2 for field -1.798 0.303     -2.423   -1.788     -1.233 -1.743
 ## 
-## Deviance Information Criterion (DIC) ...............: 8295.76
-## Deviance Information Criterion (DIC, saturated) ....: 1244861.02
-## Effective number of parameters .....................: 1566.42
-## 
-## Watanabe-Akaike information criterion (WAIC) ...: 8088.12
-## Effective number of parameters .................: 1311.77
-## 
-## Marginal log-Likelihood:  -3989.73 
-## CPO, PIT is computed 
+## Marginal log-Likelihood:  -3954.30 
+##  is computed 
 ## Posterior summaries for the linear predictor and the fitted values are computed
 ## (Posterior marginals needs also &#39;control.compute=list(return.marginals.predictor=TRUE)&#39;)</code></pre>
 </div>
@@ -836,9 +834,9 @@ Parameters</h2>
 <span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>)</span>
 <span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="fu">print</span>(result_df)</span></code></pre></div>
 <pre><code>##   parameter      mean      lower     upper      mode
-## 1     kappa 0.1695561 0.08657382 0.2856865 0.1528567
-## 2       tau 0.4552310 0.40636419 0.5104304 0.4511782</code></pre>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="fu">save.image</span>(<span class="st">&quot;Data/5Fit_model2_alpha1_exact_50m_upd.RData&quot;</span>)</span></code></pre></div>
+## 1     kappa 0.1731994 0.08918389 0.2902374 0.1565238
+## 2       tau 0.4524903 0.40391370 0.5074109 0.4484603</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="fu">save.image</span>(<span class="st">&quot;Data/5Fit_model2_alpha1_exact_50m_updated.RData&quot;</span>)</span></code></pre></div>
 </div>
 <div id="posterior-distributions-of-fixed-effects"
 class="section level2" number="10">
@@ -849,31 +847,31 @@ Distributions of Fixed Effects</h2>
 <span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a><span class="co"># Fixed effects summary table</span></span>
 <span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>fit_model2<span class="sc">$</span>summary.fixed</span></code></pre></div>
 <pre><code>##                             mean         sd 0.025quant   0.5quant 0.975quant
-## Intercept              0.1358480 0.46945381 -0.7842645  0.1358480  1.0559606
-## speed_limit            1.3751175 0.17953992  1.0232258  1.3751175  1.7270093
-## road_type1             2.1245943 0.24850873  1.6375262  2.1245943  2.6116625
-## road_type2             2.9047984 0.12932809  2.6513200  2.9047984  3.1582768
-## road_type3             2.8466007 0.09129248  2.6676707  2.8466007  3.0255306
-## road_type4             2.5794737 0.09799509  2.3874069  2.5794737  2.7715406
-## road_type5             2.4921395 0.07880750  2.3376797  2.4921395  2.6465994
-## road_type6             1.7286195 0.07457293  1.5824592  1.7286195  1.8747797
-## log_dist_education    -0.4860146 0.44359596 -1.3554467 -0.4860146  0.3834175
-## log_dist_hospital     -1.3737057 0.38192780 -2.1222704 -1.3737057 -0.6251409
-## log_dist_finance      -1.3581725 0.31746332 -1.9803892 -1.3581725 -0.7359558
-## log_dist_intersection -1.5532552 0.37859206 -2.2952820 -1.5532552 -0.8112284
+## Intercept             -0.2041706 0.42886859  -1.044738 -0.2041706  0.6363964
+## speed_limit            1.3722258 0.17901054   1.021372  1.3722258  1.7230800
+## road_type1             2.1533611 0.24893280   1.665462  2.1533611  2.6412604
+## road_type2             2.9364785 0.12980944   2.682057  2.9364785  3.1909004
+## road_type3             2.8720162 0.09128637   2.693098  2.8720162  3.0509342
+## road_type4             2.6092340 0.09815618   2.416851  2.6092340  2.8016166
+## road_type5             2.5177597 0.07893072   2.363058  2.5177597  2.6724610
+## road_type6             1.7409923 0.07462964   1.594721  1.7409923  1.8872637
+## log_dist_education    -0.4419185 0.44098770  -1.306238 -0.4419185  0.4224015
+## log_dist_hospital     -1.2950591 0.36698093  -2.014328 -1.2950591 -0.5757897
+## log_dist_finance      -1.3880687 0.31998835  -2.015234 -1.3880687 -0.7609031
+## log_dist_intersection -1.2712909 0.34606084  -1.949558 -1.2712909 -0.5930241
 ##                             mode          kld
-## Intercept              0.1358480 0.000000e+00
-## speed_limit            1.3751175 0.000000e+00
-## road_type1             2.1245943 0.000000e+00
-## road_type2             2.9047984 4.339274e-14
-## road_type3             2.8466007 8.168524e-15
-## road_type4             2.5794737 3.662094e-14
-## road_type5             2.4921395 0.000000e+00
-## road_type6             1.7286195 0.000000e+00
-## log_dist_education    -0.4860146 7.762095e-18
-## log_dist_hospital     -1.3737057 0.000000e+00
-## log_dist_finance      -1.3581725 8.903057e-16
-## log_dist_intersection -1.5532552 0.000000e+00</code></pre>
+## Intercept             -0.2041706 1.458214e-17
+## speed_limit            1.3722258 2.878843e-15
+## road_type1             2.1533611 6.106063e-15
+## road_type2             2.9364785 3.987360e-14
+## road_type3             2.8720162 1.499058e-15
+## road_type4             2.6092340 4.477383e-15
+## road_type5             2.5177597 0.000000e+00
+## road_type6             1.7409923 3.387397e-14
+## log_dist_education    -0.4419185 3.505882e-18
+## log_dist_hospital     -1.2950591 0.000000e+00
+## log_dist_finance      -1.3880687 0.000000e+00
+## log_dist_intersection -1.2712909 0.000000e+00</code></pre>
 <div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="co"># Marginal posterior densities</span></span>
 <span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>marginals_fixed <span class="ot">&lt;-</span> fit_model2<span class="sc">$</span>marginals.fixed</span>
 <span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a>df_fixed <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">names</span>(marginals_fixed), <span class="cf">function</span>(name) {</span>
@@ -887,7 +885,7 @@ Distributions of Fixed Effects</h2>
 <span id="cb18-11"><a href="#cb18-11" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>parameter, <span class="at">scales =</span> <span class="st">&quot;free&quot;</span>, <span class="at">ncol =</span> <span class="dv">4</span>) <span class="sc">+</span></span>
 <span id="cb18-12"><a href="#cb18-12" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;Value&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Density&quot;</span>) <span class="sc">+</span></span>
 <span id="cb18-13"><a href="#cb18-13" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div>
-<p><img src="model2_files/figure-html/unnamed-chunk-11-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="model2_files/figure-html/unnamed-chunk-11-1.png" alt="" width="1152" style="display: block; margin: auto;" /></p>
 </div>
 <div id="posterior-distributions-of-spde-parameters"
 class="section level2" number="11">
@@ -911,7 +909,7 @@ Distributions of SPDE Parameters</h2>
 <span id="cb19-16"><a href="#cb19-16" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>parameter, <span class="at">scales =</span> <span class="st">&quot;free&quot;</span>) <span class="sc">+</span></span>
 <span id="cb19-17"><a href="#cb19-17" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;Value&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Density&quot;</span>) <span class="sc">+</span></span>
 <span id="cb19-18"><a href="#cb19-18" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div>
-<p><img src="model2_files/figure-html/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="model2_files/figure-html/unnamed-chunk-12-1.png" alt="" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="visualizing-model-results" class="section level2" number="12">
 <h2><span class="header-section-number">12</span> Visualizing Model
@@ -925,42 +923,51 @@ using a shared color scale.</p>
 <span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a><span class="fu">library</span>(gridExtra)</span>
 <span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a><span class="fu">library</span>(cowplot)</span>
 <span id="cb20-6"><a href="#cb20-6" tabindex="-1"></a></span>
-<span id="cb20-7"><a href="#cb20-7" tabindex="-1"></a><span class="co"># Common color range across both models (1st and 99th percentile)</span></span>
-<span id="cb20-8"><a href="#cb20-8" tabindex="-1"></a>log_lambda1 <span class="ot">&lt;-</span> model1<span class="sc">$</span>graph_fitted_data<span class="sc">$</span>.linear_predictor</span>
-<span id="cb20-9"><a href="#cb20-9" tabindex="-1"></a>log_lambda2 <span class="ot">&lt;-</span> fit_model2<span class="sc">$</span>graph_fitted_data<span class="sc">$</span>.linear_predictor</span>
-<span id="cb20-10"><a href="#cb20-10" tabindex="-1"></a>common_range <span class="ot">&lt;-</span> <span class="fu">quantile</span>(<span class="fu">c</span>(log_lambda1, log_lambda2), <span class="fu">c</span>(<span class="fl">0.01</span>, <span class="fl">0.99</span>))</span>
-<span id="cb20-11"><a href="#cb20-11" tabindex="-1"></a></span>
-<span id="cb20-12"><a href="#cb20-12" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(</span>
-<span id="cb20-13"><a href="#cb20-13" tabindex="-1"></a>  <span class="at">data =</span> <span class="st">&quot;.linear_predictor&quot;</span>,</span>
-<span id="cb20-14"><a href="#cb20-14" tabindex="-1"></a>  <span class="at">newdata =</span> model1<span class="sc">$</span>graph_fitted_data,</span>
-<span id="cb20-15"><a href="#cb20-15" tabindex="-1"></a>  <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>,</span>
-<span id="cb20-16"><a href="#cb20-16" tabindex="-1"></a>  <span class="at">scale_color =</span> <span class="fu">scale_color_viridis</span>(<span class="at">limits =</span> common_range, <span class="at">oob =</span> scales<span class="sc">::</span>squish)</span>
-<span id="cb20-17"><a href="#cb20-17" tabindex="-1"></a>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">&quot;Model 1&quot;</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>() <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span>)</span>
-<span id="cb20-18"><a href="#cb20-18" tabindex="-1"></a></span>
-<span id="cb20-19"><a href="#cb20-19" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(</span>
-<span id="cb20-20"><a href="#cb20-20" tabindex="-1"></a>  <span class="at">data =</span> <span class="st">&quot;.linear_predictor&quot;</span>,</span>
-<span id="cb20-21"><a href="#cb20-21" tabindex="-1"></a>  <span class="at">newdata =</span> fit_model2<span class="sc">$</span>graph_fitted_data,</span>
-<span id="cb20-22"><a href="#cb20-22" tabindex="-1"></a>  <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>,</span>
-<span id="cb20-23"><a href="#cb20-23" tabindex="-1"></a>  <span class="at">scale_color =</span> <span class="fu">scale_color_viridis</span>(<span class="at">limits =</span> common_range, <span class="at">oob =</span> scales<span class="sc">::</span>squish)</span>
-<span id="cb20-24"><a href="#cb20-24" tabindex="-1"></a>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">&quot;Model 2&quot;</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
-<span id="cb20-25"><a href="#cb20-25" tabindex="-1"></a></span>
-<span id="cb20-26"><a href="#cb20-26" tabindex="-1"></a>shared_legend <span class="ot">&lt;-</span> cowplot<span class="sc">::</span><span class="fu">get_legend</span>(p2)</span>
-<span id="cb20-27"><a href="#cb20-27" tabindex="-1"></a></span>
-<span id="cb20-28"><a href="#cb20-28" tabindex="-1"></a><span class="fu">png</span>(<span class="st">&quot;Figures/model2_log_intensity_combined.png&quot;</span>, <span class="at">width =</span> <span class="dv">3300</span>, <span class="at">height =</span> <span class="dv">1500</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
-<span id="cb20-29"><a href="#cb20-29" tabindex="-1"></a>combined_plot <span class="ot">&lt;-</span> gridExtra<span class="sc">::</span><span class="fu">grid.arrange</span>(</span>
-<span id="cb20-30"><a href="#cb20-30" tabindex="-1"></a>  p1,</span>
-<span id="cb20-31"><a href="#cb20-31" tabindex="-1"></a>  p2 <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span>),</span>
-<span id="cb20-32"><a href="#cb20-32" tabindex="-1"></a>  shared_legend,</span>
-<span id="cb20-33"><a href="#cb20-33" tabindex="-1"></a>  <span class="at">widths =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">10</span>, <span class="dv">1</span>),</span>
-<span id="cb20-34"><a href="#cb20-34" tabindex="-1"></a>  <span class="at">layout_matrix =</span> <span class="fu">rbind</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>))</span>
-<span id="cb20-35"><a href="#cb20-35" tabindex="-1"></a>)</span>
-<span id="cb20-36"><a href="#cb20-36" tabindex="-1"></a>grid<span class="sc">::</span><span class="fu">grid.draw</span>(combined_plot)</span>
-<span id="cb20-37"><a href="#cb20-37" tabindex="-1"></a><span class="fu">dev.off</span>()</span></code></pre></div>
+<span id="cb20-7"><a href="#cb20-7" tabindex="-1"></a>model1 <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">&quot;Data/fit_model1.rds&quot;</span>)</span>
+<span id="cb20-8"><a href="#cb20-8" tabindex="-1"></a></span>
+<span id="cb20-9"><a href="#cb20-9" tabindex="-1"></a><span class="co"># Common color range across both models (1st and 99th percentile)</span></span>
+<span id="cb20-10"><a href="#cb20-10" tabindex="-1"></a>log_lambda1 <span class="ot">&lt;-</span> model1<span class="sc">$</span>graph_fitted_data<span class="sc">$</span>.linear_predictor</span>
+<span id="cb20-11"><a href="#cb20-11" tabindex="-1"></a>log_lambda2 <span class="ot">&lt;-</span> fit_model2<span class="sc">$</span>graph_fitted_data<span class="sc">$</span>.linear_predictor</span>
+<span id="cb20-12"><a href="#cb20-12" tabindex="-1"></a>common_range <span class="ot">&lt;-</span> <span class="fu">quantile</span>(<span class="fu">c</span>(log_lambda1, log_lambda2), <span class="fu">c</span>(<span class="fl">0.01</span>, <span class="fl">0.99</span>))</span>
+<span id="cb20-13"><a href="#cb20-13" tabindex="-1"></a></span>
+<span id="cb20-14"><a href="#cb20-14" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(</span>
+<span id="cb20-15"><a href="#cb20-15" tabindex="-1"></a>  <span class="at">data =</span> <span class="st">&quot;.linear_predictor&quot;</span>,</span>
+<span id="cb20-16"><a href="#cb20-16" tabindex="-1"></a>  <span class="at">newdata =</span> model1<span class="sc">$</span>graph_fitted_data,</span>
+<span id="cb20-17"><a href="#cb20-17" tabindex="-1"></a>  <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>,</span>
+<span id="cb20-18"><a href="#cb20-18" tabindex="-1"></a>  <span class="at">scale_color =</span> <span class="fu">scale_color_viridis</span>(<span class="at">limits =</span> common_range, <span class="at">oob =</span> scales<span class="sc">::</span>squish)</span>
+<span id="cb20-19"><a href="#cb20-19" tabindex="-1"></a>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">&quot;Model 1&quot;</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>() <span class="sc">+</span> </span>
+<span id="cb20-20"><a href="#cb20-20" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb20-21"><a href="#cb20-21" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
+<span id="cb20-22"><a href="#cb20-22" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span></span>
+<span id="cb20-23"><a href="#cb20-23" tabindex="-1"></a>  )</span>
+<span id="cb20-24"><a href="#cb20-24" tabindex="-1"></a></span>
+<span id="cb20-25"><a href="#cb20-25" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(</span>
+<span id="cb20-26"><a href="#cb20-26" tabindex="-1"></a>  <span class="at">data =</span> <span class="st">&quot;.linear_predictor&quot;</span>,</span>
+<span id="cb20-27"><a href="#cb20-27" tabindex="-1"></a>  <span class="at">newdata =</span> fit_model2<span class="sc">$</span>graph_fitted_data,</span>
+<span id="cb20-28"><a href="#cb20-28" tabindex="-1"></a>  <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>,</span>
+<span id="cb20-29"><a href="#cb20-29" tabindex="-1"></a>  <span class="at">scale_color =</span> <span class="fu">scale_color_viridis</span>(<span class="at">limits =</span> common_range, <span class="at">oob =</span> scales<span class="sc">::</span>squish)</span>
+<span id="cb20-30"><a href="#cb20-30" tabindex="-1"></a>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">&quot;Model 2&quot;</span>) <span class="sc">+</span> <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb20-31"><a href="#cb20-31" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb20-32"><a href="#cb20-32" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="fl">0.5</span>)</span>
+<span id="cb20-33"><a href="#cb20-33" tabindex="-1"></a>  )</span>
+<span id="cb20-34"><a href="#cb20-34" tabindex="-1"></a></span>
+<span id="cb20-35"><a href="#cb20-35" tabindex="-1"></a>shared_legend <span class="ot">&lt;-</span> cowplot<span class="sc">::</span><span class="fu">get_legend</span>(p2)</span>
+<span id="cb20-36"><a href="#cb20-36" tabindex="-1"></a></span>
+<span id="cb20-37"><a href="#cb20-37" tabindex="-1"></a><span class="fu">png</span>(<span class="st">&quot;Figures/model2_log_intensity_combined.png&quot;</span>, <span class="at">width =</span> <span class="dv">3300</span>, <span class="at">height =</span> <span class="dv">1500</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
+<span id="cb20-38"><a href="#cb20-38" tabindex="-1"></a>gridExtra<span class="sc">::</span><span class="fu">grid.arrange</span>(</span>
+<span id="cb20-39"><a href="#cb20-39" tabindex="-1"></a>  p1,</span>
+<span id="cb20-40"><a href="#cb20-40" tabindex="-1"></a>  p2 <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span>),</span>
+<span id="cb20-41"><a href="#cb20-41" tabindex="-1"></a>  shared_legend,</span>
+<span id="cb20-42"><a href="#cb20-42" tabindex="-1"></a>  <span class="at">widths =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">10</span>, <span class="dv">1</span>),</span>
+<span id="cb20-43"><a href="#cb20-43" tabindex="-1"></a>  <span class="at">layout_matrix =</span> <span class="fu">rbind</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>)),</span>
+<span id="cb20-44"><a href="#cb20-44" tabindex="-1"></a>  <span class="at">padding =</span> <span class="fu">unit</span>(<span class="dv">0</span>, <span class="st">&quot;cm&quot;</span>)   </span>
+<span id="cb20-45"><a href="#cb20-45" tabindex="-1"></a>)</span>
+<span id="cb20-46"><a href="#cb20-46" tabindex="-1"></a><span class="fu">dev.off</span>()</span></code></pre></div>
 <div id="estimated-log-intensity-for-model-1-left-and-model-2-right"
 class="section level3" number="12.1">
 <h3><span class="header-section-number">12.1</span> Estimated
 log-intensity for Model 1 (left) and Model 2 (right)</h3>
-<p><img src="Figures/New_5Graph_exact_vir__log_intensity_combined2.png" width="1650" style="display: block; margin: auto;" /></p>
+<p><img src="Figures/model2_log_intensity_combined.png" alt="" width="1650" style="display: block; margin: auto;" /></p>
 </div>
 <div id="posterior-mean-of-us-for-model-2" class="section level3"
 number="12.2">
@@ -973,62 +980,70 @@ captures spatial variation not explained by the covariates.</p>
 <span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a>  <span class="at">data =</span> <span class="st">&quot;.predicted_field&quot;</span>,</span>
 <span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a>  <span class="at">newdata =</span> fit_model2<span class="sc">$</span>graph_fitted_data,</span>
 <span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a>  <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>,</span>
-<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a>  <span class="at">scale_color =</span> <span class="fu">scale_color_scico</span>(<span class="at">palette =</span> <span class="st">&quot;vikO&quot;</span>, <span class="at">midpoint =</span> <span class="dv">0</span>,</span>
-<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a>                                   <span class="at">limits =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">2</span>, <span class="dv">2</span>), <span class="at">oob =</span> scales<span class="sc">::</span>squish)</span>
-<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="fu">expression</span>(<span class="sc">~</span>u)) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
-<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a><span class="fu">print</span>(p3)</span>
-<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a><span class="fu">dev.off</span>()</span></code></pre></div>
-<p><img src="Figures/New_5Graph_model2_alpha1_7FRC_pruned_exact_50m_posterior_u_vikO.png" width="1350" style="display: block; margin: auto;" /></p>
+<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a>  <span class="at">scale_color =</span> <span class="fu">scale_color_scico</span>(<span class="at">palette =</span> <span class="st">&quot;vikO&quot;</span>, <span class="at">midpoint =</span> <span class="dv">0</span>)) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a><span class="fu">print</span>(p3)</span>
+<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a><span class="fu">dev.off</span>()</span>
+<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a></span>
+<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a><span class="co"># Log of fitted values (log-intensity)</span></span>
+<span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a>fit_model2<span class="sc">$</span>graph_fitted_data<span class="sc">$</span>.log_fitted_values <span class="ot">&lt;-</span> <span class="fu">log</span>(fit_model2<span class="sc">$</span>graph_fitted_data<span class="sc">$</span>.fitted_values)</span>
+<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a><span class="fu">png</span>(<span class="st">&quot;Figures/model2_log_fitted_values.png&quot;</span>, <span class="at">height =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">700</span>, <span class="at">width =</span> <span class="dv">3</span> <span class="sc">*</span> <span class="dv">900</span>, <span class="at">res =</span> <span class="dv">300</span>)</span>
+<span id="cb21-13"><a href="#cb21-13" tabindex="-1"></a>p4 <span class="ot">&lt;-</span> graph<span class="sc">$</span><span class="fu">plot_function</span>(<span class="at">data =</span> <span class="st">&quot;.log_fitted_values&quot;</span>, <span class="at">newdata =</span> fit_model2<span class="sc">$</span>graph_fitted_data,</span>
+<span id="cb21-14"><a href="#cb21-14" tabindex="-1"></a>                    <span class="at">vertex_size =</span> <span class="dv">0</span>, <span class="at">edge_width =</span> <span class="fl">0.2</span>, <span class="at">scale_color =</span> <span class="fu">scale_color_scico</span>(<span class="at">palette =</span> <span class="st">&quot;vik&quot;</span>, <span class="at">midpoint =</span> <span class="dv">0</span>)) <span class="sc">+</span> <span class="fu">theme_minimal</span>()</span>
+<span id="cb21-15"><a href="#cb21-15" tabindex="-1"></a><span class="fu">print</span>(p4)</span>
+<span id="cb21-16"><a href="#cb21-16" tabindex="-1"></a><span class="fu">dev.off</span>()</span></code></pre></div>
+<p><img src="Figures/5Graph_model2_alpha1_7FRC_pruned_exact_50m_posterior_u_vikO.png" alt="" width="1350" style="display: block; margin: auto;" /></p>
 </div>
 </div>
 <div id="session-info" class="section level2" number="13">
 <h2><span class="header-section-number">13</span> Session Info</h2>
 <div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
-<pre><code>## R version 4.5.1 (2025-06-13)
-## Platform: aarch64-apple-darwin20
-## Running under: macOS Sequoia 15.7.1
+<pre><code>## R version 4.6.0 (2026-04-24)
+## Platform: aarch64-apple-darwin23
+## Running under: macOS Tahoe 26.2
 ## 
 ## Matrix products: default
-## BLAS:   /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRblas.0.dylib 
-## LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+## BLAS:   /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRblas.0.dylib 
+## LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
 ## 
 ## locale:
 ## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 ## 
-## time zone: Asia/Riyadh
+## time zone: Asia/Almaty
 ## tzcode source: internal
 ## 
 ## attached base packages:
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-## [1] ggplot2_4.0.0          dplyr_1.1.4            sf_1.0-23             
-## [4] qs_0.27.3              INLA_25.10.19          Matrix_1.7-3          
-## [7] MetricGraph_1.5.0.9000
+## [1] ggplot2_4.0.3     dplyr_1.2.1       sf_1.1-1          INLA_25.10.19    
+## [5] Matrix_1.7-5      MetricGraph_1.6.0
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] gtable_0.3.6          xfun_0.54             bslib_0.9.0          
-##  [4] RApiSerialize_0.1.4   lattice_0.22-7        vctrs_0.6.5          
-##  [7] tools_4.5.1           generics_0.1.4        parallel_4.5.1       
-## [10] tibble_3.3.0          proxy_0.4-27          pkgconfig_2.0.3      
+##  [1] gtable_0.3.6          xfun_0.57             bslib_0.10.0         
+##  [4] lattice_0.22-9        vctrs_0.7.3           tools_4.6.0          
+##  [7] spatstat.utils_3.2-3  generics_0.1.4        parallel_4.6.0       
+## [10] tibble_3.3.1          proxy_0.4-29          pkgconfig_2.0.3      
 ## [13] KernSmooth_2.23-26    ggnewscale_0.5.2      RColorBrewer_1.1-3   
-## [16] S7_0.2.0              RcppParallel_5.1.11-1 lifecycle_1.0.4      
-## [19] compiler_4.5.1        farver_2.1.2          fmesher_0.5.0        
-## [22] MatrixModels_0.5-4    htmltools_0.5.8.1     class_7.3-23         
-## [25] sass_0.4.10           yaml_2.3.10           pillar_1.11.1        
-## [28] jquerylib_0.1.4       tidyr_1.3.1           classInt_0.4-11      
-## [31] cachem_1.1.0          wk_0.9.4              Deriv_4.2.0          
-## [34] tidyselect_1.2.1      digest_0.6.39         purrr_1.2.0          
-## [37] labeling_0.4.3        splines_4.5.1         fastmap_1.2.0        
-## [40] grid_4.5.1            cli_3.6.5             magrittr_2.0.4       
-## [43] broom_1.0.11          e1071_1.7-16          withr_3.0.2          
-## [46] scales_1.4.0          backports_1.5.0       sp_2.2-0             
-## [49] rmarkdown_2.30        igraph_2.2.1          RANN_2.6.2           
-## [52] zoo_1.8-14            png_0.1-8             stringfish_0.17.0    
-## [55] evaluate_1.0.5        knitr_1.50            s2_1.1.9             
-## [58] rlang_1.1.6           Rcpp_1.1.0            glue_1.8.0           
-## [61] DBI_1.2.3             rstudioapi_0.17.1     rSPDE_2.5.1.9000     
-## [64] jsonlite_2.0.0        R6_2.6.1              units_1.0-0</code></pre>
+## [16] S7_0.2.2              lifecycle_1.0.5       compiler_4.6.0       
+## [19] farver_2.1.2          deldir_2.0-4          fmesher_0.7.0        
+## [22] MatrixModels_0.5-4    codetools_0.2-20      htmltools_0.5.9      
+## [25] class_7.3-23          sass_0.4.10           yaml_2.3.12          
+## [28] pillar_1.11.1         jquerylib_0.1.4       tidyr_1.3.2          
+## [31] classInt_0.4-11       cachem_1.1.0          spatstat.univar_3.2-0
+## [34] wk_0.9.5              iterators_1.0.14      foreach_1.5.2        
+## [37] spatstat.geom_3.8-1   Deriv_4.2.0           tidyselect_1.2.1     
+## [40] digest_0.6.39         purrr_1.2.2           labeling_0.4.3       
+## [43] splines_4.6.0         polyclip_1.10-7       fastmap_1.2.0        
+## [46] grid_4.6.0            cli_3.6.6             magrittr_2.0.5       
+## [49] dichromat_2.0-0.1     broom_1.0.13          e1071_1.7-17         
+## [52] spatstat.data_3.1-9   withr_3.0.2           scales_1.4.0         
+## [55] backports_1.5.1       sp_2.2-1              rmarkdown_2.31       
+## [58] igraph_2.3.2          otel_0.2.0            RANN_2.6.2           
+## [61] png_0.1-9             zoo_1.8-15            evaluate_1.0.5       
+## [64] knitr_1.51            doParallel_1.0.17     s2_1.1.11            
+## [67] rlang_1.2.0           Rcpp_1.1.1-1.1        glue_1.8.1           
+## [70] DBI_1.3.0             rstudioapi_0.18.0     rSPDE_2.5.2.9000     
+## [73] jsonlite_2.0.0        R6_2.6.1              units_1.0-1</code></pre>
 </div>
 
 
